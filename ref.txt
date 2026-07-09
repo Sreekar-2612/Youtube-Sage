@@ -1,0 +1,44 @@
+1.api.js is to coonect the react frontend to backedn running on 8000 port
+react frontend(local host:5173)
+|
+|       http requests using fetch()
+|
+|
+fast api backend(localhost:8000)
+|
+|
+langchain/youtube/llm/vector DB
+
+2.in App.jsx:
+React       → React library
+useState    → Stores changing data
+useEffect   → Runs code when something happens
+
+3. State variables:
+
+The most important concept in this file is useState.
+General syntax:
+const [value, setValue] = useState(initialValue);
+
+4.
+useEffect(() => {
+        if(!config) return;
+        const options = provider == "groq"? config.groq_models : config.hf_models;
+        setModelName(Object.values(options)[0]);
+    },[provider,config]);
+
+[provider,config] means thay the effect runs whenever the provider changes or config changes
+
+
+5.React gives the previous messages to the function as:prev
+...prev copies all the exisiting messages into a new array
+
+the pattern is setMessages((prev) => [...prev,newMessage]);--> means keep all the old messages and add one new message at the end.
+
+6.why use prev?
+Why?
+React state updates may not happen immediately.
+Since this function updates messages multiple times,
+prev guarantees that you receive the latest available
+message list.
+
