@@ -1,4 +1,4 @@
-const BASE_URL = "https://localhost:8000"
+const BASE_URL = "http://localhost:8000"
 
 async function handle(res) {
     if(!res.ok) {
@@ -19,14 +19,14 @@ export const api = {
         }).then(handle),
 
     chat:(session_id,question,use_agent) => 
-        fetch(`{BASE_URL}/api/chat`,{
+        fetch(`${BASE_URL}/api/chat`,{
             method : "POST",
-            headers = {"Content-Type":"application/json"},
+            headers : {"Content-Type":"application/json"},
             body: JSON.stringify({session_id,question,use_agent}),
         }).then(handle),
 
     clearSession : (session_id) =>
-        fetch(`{BASE_URL}/api/session/clear`,{
+        fetch(`${BASE_URL}/api/session/clear`,{
             method:"POST",
             headers : {"Content-Type":"application/json"},
             body:JSON.stringify({session_id}),

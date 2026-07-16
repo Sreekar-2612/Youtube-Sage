@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>YT-SAGE Dashboard | Codec Tech</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e2e2e2",
+                        "on-secondary-container": "#fffbff",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-secondary-fixed": "#410001",
+                        "tertiary-container": "#da8a36",
+                        "outline-variant": "#bcc9cc",
+                        "inverse-primary": "#55d7ed",
+                        "on-primary-fixed": "#001f24",
+                        "on-secondary-fixed-variant": "#930005",
+                        "primary": "#006876",
+                        "on-tertiary-container": "#502b00",
+                        "on-primary-fixed-variant": "#004e59",
+                        "primary-container": "#00acc1",
+                        "secondary-fixed-dim": "#ffb4a9",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "on-background": "#1a1c1c",
+                        "surface-dim": "#dadada",
+                        "secondary": "#b81311",
+                        "on-surface": "#1a1c1c",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#003a42",
+                        "surface-tint": "#006876",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#9eefff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#ffdad5",
+                        "primary-fixed-dim": "#55d7ed",
+                        "tertiary-fixed-dim": "#ffb875",
+                        "outline": "#6d797c",
+                        "on-tertiary-fixed-variant": "#6b3b00",
+                        "surface-bright": "#f9f9f9",
+                        "on-tertiary-fixed": "#2d1600",
+                        "surface": "#f9f9f9",
+                        "secondary-container": "#dc3128",
+                        "error-container": "#ffdad6",
+                        "background": "#f9f9f9",
+                        "tertiary": "#8d4f00",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#3d494b",
+                        "surface-container-high": "#e8e8e8",
+                        "tertiary-fixed": "#ffdcc0",
+                        "inverse-surface": "#2f3131",
+                        "surface-container-low": "#f3f3f3",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-on-surface": "#f1f1f1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "max-width": "1280px",
+                        "gutter": "24px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Montserrat"],
+                        "body-lg": ["Montserrat"],
+                        "button-text": ["Montserrat"],
+                        "body-md": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "label-technical": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", {"lineHeight": "38px", "letterSpacing": "-0.01em", "fontWeight": "800"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "button-text": ["14px", {"lineHeight": "16px", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-technical": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { background-color: #f9f9f9; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hard-shadow-hover:hover {
+            box-shadow: 4px 4px 0px 0px #b81311;
+            transform: translate(-2px, -2px);
+        }
+        .active-glow {
+            box-shadow: 0 0 15px rgba(0, 172, 193, 0.3);
+        }
+        .tech-border {
+            border: 1px solid #e0e0e0;
+        }
+        .tech-border-primary {
+            border: 2px solid #00acc1;
+        }
+    </style>
+</head>
+<body class="flex overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="flex flex-col h-screen p-unit gap-4 bg-surface-container dark:bg-surface-container docked left-0 h-full w-64 border-r border-outline-variant dark:border-outline z-50">
+<div class="px-4 py-6">
+<h1 class="font-display-lg-mobile text-display-lg-mobile font-black text-primary uppercase">YT-SAGE</h1>
+<p class="font-label-technical text-label-technical text-on-surface-variant opacity-70">V3.4 Stable</p>
+</div>
+<nav class="flex-1 flex flex-col gap-2 px-2">
+<!-- Source (Active) -->
+<a class="flex items-center gap-3 px-4 py-3 bg-primary text-on-primary rounded-lg border-2 border-primary shadow-[4px_0px_0px_0px_rgba(184,19,17,1)] active:translate-x-1 duration-75" href="#">
+<span class="material-symbols-outlined">video_library</span>
+<span class="font-label-technical text-label-technical uppercase">Source</span>
+</a>
+<!-- Engine -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant hover:border-2 hover:border-primary-container transition-all active:translate-x-1 duration-75" href="#">
+<span class="material-symbols-outlined">memory</span>
+<span class="font-label-technical text-label-technical uppercase">Engine</span>
+</a>
+<!-- Metrics -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant hover:border-2 hover:border-primary-container transition-all active:translate-x-1 duration-75" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-technical text-label-technical uppercase">Metrics</span>
+</a>
+<!-- Settings -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant hover:border-2 hover:border-primary-container transition-all active:translate-x-1 duration-75" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-technical text-label-technical uppercase">Settings</span>
+</a>
+</nav>
+<div class="mt-auto p-4 flex flex-col gap-4">
+<button class="w-full bg-secondary text-on-secondary font-button-text text-button-text uppercase py-3 rounded-lg border-2 border-secondary hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_#00acc1] transition-all duration-100">
+                Deploy Engine
+            </button>
+<div class="flex flex-col gap-2 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant font-label-technical text-label-technical hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">help</span> Support
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant font-label-technical text-label-technical hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">terminal</span> Logs
+                </a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen bg-background overflow-hidden relative">
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center px-margin-desktop w-full h-16 border-b border-outline-variant dark:border-outline bg-surface z-40">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">analytics</span>
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-on-surface">WORKSPACE_ALPHA</span>
+</div>
+<div class="flex items-center gap-gutter">
+<div class="hidden md:flex items-center border border-outline rounded p-1 bg-surface-container-low">
+<span class="material-symbols-outlined px-2 text-on-surface-variant">search</span>
+<input class="bg-transparent border-none focus:ring-0 font-label-technical text-label-technical w-48" placeholder="Global Search..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
+<span class="material-symbols-outlined">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Dynamic Content Grid -->
+<div class="flex-1 overflow-y-auto p-gutter grid grid-cols-12 gap-gutter">
+<!-- Left Column: Source & Engine -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+<!-- Source Section -->
+<section class="bg-white tech-border p-6 rounded shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h2 class="font-headline-md text-headline-md flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">link</span> SOURCE
+                        </h2>
+<span class="bg-secondary-fixed text-secondary px-2 py-1 font-label-technical text-[10px] rounded border border-secondary uppercase">Live</span>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block font-label-technical text-label-technical mb-2 text-on-surface-variant">VIDEO URL / STREAM</label>
+<input class="w-full bg-surface-container-low border border-outline px-4 py-3 font-label-technical text-label-technical text-primary focus:border-primary-container focus:ring-0" type="text" value="https://youtube.com/v/q8k32_v82s"/>
+</div>
+<div class="aspect-video bg-surface-container relative overflow-hidden rounded tech-border">
+<img class="w-full h-full object-cover grayscale-[0.2]" data-alt="A professional video editor's perspective showing a complex timeline of a cinematic technology review video. The scene is lit with cool blue and warm orange studio lights, reflecting a high-contrast technical aesthetic. The video frame shows a high-end motherboard being inspected. Minimalist UI overlays suggest active AI analysis." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVZTwClfF4zYDqJYeHd2ULXymHy7qHMIKuQGTA3qouxJUNZKt_V4qSNBZiFoL9DwuRbfUBXcQp674QS492T6ZI75tdGodbZ72VhxSUXQYuJRJCbWdpfWJeTcu7Blwn7HdHcLi4WKbshxGB1Apt30XkZ9TUaFfsRoZ537XlosYtppoRAwg1jbtvWW5-6ynrI3CjwTSIIIRi9iPWwvwTIgrHRdcED8Wxmpr_fZgDUnZmxa4sp8T2eto_ipPFkDOewAZX4i_cFhgy9Hk"/>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20 group cursor-pointer">
+<span class="material-symbols-outlined text-white text-5xl hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Engine Section -->
+<section class="bg-white tech-border p-6 rounded shadow-sm border-l-4 border-l-primary-container">
+<h2 class="font-headline-md text-headline-md mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">memory</span> ENGINE
+                    </h2>
+<div class="space-y-4">
+<div class="grid grid-cols-2 gap-2">
+<button class="bg-primary text-on-primary p-3 text-center tech-border-primary font-label-technical text-label-technical uppercase">SAGE-70B-TURBO</button>
+<button class="bg-surface-container text-on-surface-variant p-3 text-center tech-border font-label-technical text-label-technical uppercase hover:bg-surface-variant">NOVA-FLASH-1.5</button>
+</div>
+<div class="p-4 bg-surface-container-lowest border border-outline-variant">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-technical text-label-technical text-on-surface-variant">INFERENCE SPEED</span>
+<span class="font-label-technical text-label-technical text-primary font-bold">128 t/s</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full w-[85%]"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Performance Badges -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white tech-border p-4 rounded flex flex-col items-center justify-center">
+<span class="font-label-technical text-label-technical text-on-surface-variant uppercase text-xs">Latency</span>
+<span class="font-headline-md text-headline-md font-black text-secondary">42ms</span>
+</div>
+<div class="bg-white tech-border p-4 rounded flex flex-col items-center justify-center border-t-4 border-t-primary-container">
+<span class="font-label-technical text-label-technical text-on-surface-variant uppercase text-xs">Stability</span>
+<span class="font-headline-md text-headline-md font-black text-primary">99.9%</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Chat Analysis Workspace -->
+<div class="col-span-12 lg:col-span-8 flex flex-col gap-gutter h-full">
+<!-- Chat Feed -->
+<section class="bg-white tech-border rounded shadow-sm flex flex-col h-[calc(100vh-280px)]">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<h3 class="font-label-technical text-label-technical font-bold uppercase tracking-widest text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">chat_bubble</span> Neural Analysis Feed
+                        </h3>
+<div class="flex gap-2">
+<span class="bg-primary-container/10 text-primary px-3 py-1 font-label-technical text-[10px] rounded border border-primary-container/30 uppercase">High Confidence</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">filter_list</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- AI Response -->
+<div class="flex flex-col gap-2 max-w-[85%]">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<span class="font-label-technical text-[12px] font-bold text-primary">SAGE_AI</span>
+<span class="font-label-technical text-[10px] text-on-surface-variant opacity-60">12:04:22</span>
+</div>
+<div class="bg-surface-container-low p-4 tech-border border-l-4 border-l-primary-container rounded-r-xl">
+<p class="font-body-md text-body-md text-on-surface">
+                                    Analysis complete for segment 02:45. The speaker identifies <span class="font-bold text-secondary">Neural Compression</span> as the primary bottleneck for real-time video rendering. Confidence score: 0.98.
+                                </p>
+<div class="mt-4 flex gap-2">
+<span class="bg-white border border-primary-container text-primary font-label-technical text-[10px] px-2 py-1 rounded">TRANSCRIPT</span>
+<span class="bg-white border border-outline-variant text-on-surface-variant font-label-technical text-[10px] px-2 py-1 rounded">VECTOR_DB</span>
+</div>
+</div>
+</div>
+<!-- User Query -->
+<div class="flex flex-col gap-2 max-w-[80%] ml-auto items-end">
+<div class="flex items-center gap-2 flex-row-reverse">
+<div class="w-6 h-6 bg-secondary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]">person</span>
+</div>
+<span class="font-label-technical text-[12px] font-bold text-secondary">ROOT_ADMIN</span>
+<span class="font-label-technical text-[10px] text-on-surface-variant opacity-60">12:05:01</span>
+</div>
+<div class="bg-secondary text-on-secondary p-4 rounded-l-xl rounded-b-xl border-b-4 border-r-4 border-primary">
+<p class="font-body-md text-body-md italic">
+                                    "Summarize the technical specifications mentioned in the next 5 minutes."
+                                </p>
+</div>
+</div>
+<!-- AI Summary Box -->
+<div class="flex flex-col gap-2 max-w-[90%]">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<span class="font-label-technical text-[12px] font-bold text-primary">ENGINE_SUMMARY</span>
+</div>
+<div class="bg-white p-6 tech-border border-t-4 border-t-primary shadow-lg rounded-xl">
+<div class="grid grid-cols-2 gap-4">
+<div class="p-3 bg-surface-container-low border-l-4 border-l-secondary">
+<h4 class="font-label-technical text-[11px] text-secondary font-black mb-1 uppercase">Hardware Req</h4>
+<p class="font-label-technical text-[13px]">RTX 4090 / 24GB VRAM</p>
+</div>
+<div class="p-3 bg-surface-container-low border-l-4 border-l-primary-container">
+<h4 class="font-label-technical text-[11px] text-primary-container font-black mb-1 uppercase">Throughput</h4>
+<p class="font-label-technical text-[13px]">4.2 GB/s Bandwidth</p>
+</div>
+</div>
+<p class="mt-4 font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                                    The system utilizes a custom <span class="text-primary font-bold">Tensor-Core</span> accelerated pipeline designed for zero-latency frame extraction.
+                                </p>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-6 bg-surface-container-lowest border-t border-outline-variant">
+<div class="flex items-center gap-4 bg-white tech-border p-2 rounded-lg group focus-within:tech-border-primary transition-all">
+<span class="material-symbols-outlined text-outline-variant px-2 group-focus-within:text-primary transition-colors">terminal</span>
+<input class="flex-1 bg-transparent border-none focus:ring-0 font-label-technical text-label-technical text-on-surface" placeholder="Execute analysis command..." type="text"/>
+<button class="bg-primary text-on-primary px-6 py-2 font-button-text text-button-text uppercase rounded flex items-center gap-2 hard-shadow-hover transition-all">
+                                Send <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Footer Stats -->
+<div class="flex justify-between items-center px-4 font-label-technical text-[11px] text-on-surface-variant opacity-70 uppercase tracking-tighter">
+<span>UPTIME: 142H 12M 03S</span>
+<span>API_STATUS: NOMINAL</span>
+<span>ENGINE: SAGE_70B_V3</span>
+<span class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div> ENCRYPTED_TUNNEL</span>
+</div>
+</div>
+</div>
+<!-- Floating Action for Mobile / Quick Settings -->
+<button class="absolute bottom-10 right-10 w-16 h-16 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-xl border-4 border-white hover:scale-110 active:scale-95 transition-all lg:hidden">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</main>
+<script>
+        // Micro-interaction for technical dashboard feel
+        document.querySelectorAll('button, a').forEach(elem => {
+            elem.addEventListener('mousedown', () => {
+                elem.style.transform = 'scale(0.98)';
+            });
+            elem.addEventListener('mouseup', () => {
+                elem.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simulating log output in console for tech aesthetics
+        console.log("%c YT-SAGE CORE INITIALIZED ", "background: #006876; color: white; font-weight: bold; padding: 4px;");
+        console.log("%c [STATUS] Engine: SAGE-70B Active ", "color: #00acc1;");
+        console.log("%c [STATUS] Buffer: 4096MB Secured ", "color: #00acc1;");
+    </script>
+</body></html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>YT-SAGE | Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&amp;family=Hanken+Grotesk:wght@300;400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#f3f3f4",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#838484",
+                    "tertiary": "#000000",
+                    "surface-variant": "#e2e2e2",
+                    "on-tertiary-fixed-variant": "#464747",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "background": "#f9f9f9",
+                    "surface-container-high": "#e8e8e8",
+                    "primary-fixed": "#e5e2e1",
+                    "surface": "#f9f9f9",
+                    "tertiary-fixed-dim": "#c7c6c6",
+                    "surface-dim": "#dadada",
+                    "tertiary-container": "#1a1c1c",
+                    "outline-variant": "#c4c7c7",
+                    "inverse-on-surface": "#f0f1f1",
+                    "inverse-primary": "#c8c6c5",
+                    "primary-container": "#1c1b1b",
+                    "inverse-surface": "#2f3131",
+                    "on-primary-container": "#858383",
+                    "on-background": "#1a1c1c",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#1c1b1b",
+                    "error": "#ba1a1a",
+                    "surface-container": "#eeeeee",
+                    "surface-bright": "#f9f9f9",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#5d5f5f",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "outline": "#747878",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "secondary-container": "#dcdddd",
+                    "primary": "#000000",
+                    "on-primary-fixed-variant": "#474746",
+                    "surface-container-highest": "#e2e2e2",
+                    "on-secondary-fixed-variant": "#454747",
+                    "tertiary-fixed": "#e3e2e2",
+                    "on-secondary-container": "#5f6161",
+                    "surface-tint": "#5f5e5e",
+                    "on-secondary": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "secondary-fixed-dim": "#c6c6c7",
+                    "on-surface-variant": "#444748",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#e2e2e2",
+                    "on-secondary-fixed": "#1a1c1c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0px",
+                    "lg": "0px",
+                    "xl": "0px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "stack-lg": "80px",
+                    "gutter": "32px",
+                    "unit": "8px",
+                    "stack-md": "40px",
+                    "container-max": "1280px",
+                    "margin-mobile": "20px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Syne"],
+                    "body-md": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Syne"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "headline-md": ["Syne"],
+                    "headline-lg": ["Syne"],
+                    "body-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "display-lg": ["80px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["32px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.15em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "0.1em", "fontWeight": "500"}],
+                    "headline-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0.01em", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f9f9f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e2e2;
+        }
+        .editorial-mask {
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest border-b border-outline-variant h-20 flex items-center">
+<div class="flex justify-between items-center w-full px-margin-desktop max-w-container-max mx-auto h-full">
+<div class="flex items-center gap-stack-md">
+<span class="font-display-lg text-headline-md tracking-tighter text-primary">YT-SAGE</span>
+<nav class="hidden md:flex gap-8 items-center h-full">
+<a class="text-primary font-bold border-b border-primary py-2 hover:text-primary transition-colors duration-200 font-label-sm text-label-sm" href="#">Workspace</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 font-label-sm text-label-sm" href="#">History</a>
+<a class="text-secondary hover:text-primary transition-colors duration-200 font-label-sm text-label-sm" href="#">Resources</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary transition-opacity active:opacity-70">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full"></span>
+</div>
+<div class="w-10 h-10 border border-outline-variant p-0.5">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A sophisticated close-up portrait of a professional in a minimalist setting. High-fashion editorial lighting with strong contrast between light and shadow. The aesthetic is clean, intellectual, and refined, using a monochrome palette with deep charcoal and brilliant white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjlANAts8nijrLMJUC63I9HnagLyvcqc0iLhA4bXy8EDUdimzn0-sv8Mj_3Rk-Ce_Dto6e_Rxi51oZwdWC0m0Mc5dwIssiySf2rv3PxdvaH8fdA2_KLVZjOQU0WUZI4XE8MOv9Efj_0WhEEpGc6nfglOjI4RZOz8lJR_NXAL0Fzrty_V6ILd-MDoRwn7FLoMxe5OlDEEMoedcnIIHHF8t9VuU0mrBk4-LYWhNXxx91XeZlIf5fzKzBcnb17GLj_1EJBEezPILfun8"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex h-screen pt-20">
+<!-- SideNavBar -->
+<aside class="fixed left-0 w-64 h-[calc(100vh-80px)] bg-surface border-r border-outline-variant hidden md:flex flex-col py-stack-md z-40">
+<div class="px-8 mb-stack-md">
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-secondary mb-1">Project Alpha</p>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-green-500 rounded-full"></span>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-semibold">AI Engine Active</p>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<button class="w-full text-left py-3 flex items-center gap-4 text-primary border-l-2 border-primary pl-4 transition-all duration-300 hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="video_library">video_library</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Sources</span>
+</button>
+<button class="w-full text-left py-3 flex items-center gap-4 text-secondary pl-4 transition-all duration-300 hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Engine</span>
+</button>
+<button class="w-full text-left py-3 flex items-center gap-4 text-secondary pl-4 transition-all duration-300 hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Metrics</span>
+</button>
+<button class="w-full text-left py-3 flex items-center gap-4 text-secondary pl-4 transition-all duration-300 hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Settings</span>
+</button>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full py-4 border border-primary text-primary font-bold font-label-sm text-label-sm uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-all duration-300">
+                    New Analysis
+                </button>
+<div class="mt-stack-md pt-8 border-t border-outline-variant space-y-4">
+<div class="flex items-center gap-4 text-secondary hover:text-primary transition-colors cursor-pointer pl-2">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Support</span>
+</div>
+<div class="flex items-center gap-4 text-secondary hover:text-primary transition-colors cursor-pointer pl-2">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Account</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="flex-1 ml-0 md:ml-64 flex flex-col h-full bg-background overflow-hidden">
+<!-- Grid Background Overlay -->
+<div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 40px 40px;"></div>
+<div class="flex-1 overflow-y-auto px-margin-desktop py-12 relative z-10">
+<div class="max-w-4xl mx-auto space-y-stack-md pb-32">
+<!-- Performance Metrics Bar -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter border-b border-outline-variant pb-8">
+<div>
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-secondary mb-2">Throughput</p>
+<p class="font-headline-md text-headline-md">482.5 <span class="text-secondary font-body-md">t/s</span></p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-secondary mb-2">Latency</p>
+<p class="font-headline-md text-headline-md">120 <span class="text-secondary font-body-md">ms</span></p>
+</div>
+<div class="flex items-end justify-between">
+<div>
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-secondary mb-2">Agent Mode</p>
+<div class="w-12 h-6 border border-primary relative cursor-pointer" onclick="this.querySelector('div').classList.toggle('translate-x-6')">
+<div class="absolute top-0.5 left-0.5 w-[20px] h-[18px] bg-primary transition-transform duration-300 translate-x-6"></div>
+</div>
+</div>
+<div class="text-right">
+<span class="px-2 py-1 border border-primary text-[10px] font-bold uppercase tracking-widest">Engine High-Confidence</span>
+</div>
+</div>
+</div>
+<!-- Chat Log -->
+<div class="space-y-stack-md">
+<!-- User Query -->
+<div class="flex justify-end">
+<div class="max-w-xl p-8 border border-outline-variant bg-surface-container-lowest">
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-secondary mb-4">You</p>
+<p class="text-body-lg font-body-lg">Can you please summarize the RAG (Retrieval-Augmented Generation) pipelines mentioned in the latest technical review?</p>
+</div>
+</div>
+<!-- AI Response -->
+<div class="flex justify-start">
+<div class="max-w-2xl">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-10 h-10 border border-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-primary">YT-SAGE AI</p>
+<p class="text-[10px] text-secondary">PROCESSED IN 0.4s</p>
+</div>
+</div>
+<div class="p-8 border border-primary bg-white relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="text-[10px] border border-outline-variant px-2 py-1 text-secondary">RELIABILITY: 98.4%</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-6 leading-tight">RAG Pipelines: Technical Overview</h3>
+<div class="space-y-6 text-on-surface-variant leading-relaxed">
+<p>The analysis reveals a multi-stage orchestration for the Retrieval-Augmented Generation (RAG) architecture. Key components identified include:</p>
+<ul class="space-y-4 border-l border-outline-variant pl-6">
+<li>
+<span class="font-bold text-primary block text-label-sm uppercase tracking-widest mb-1">1. Vector Embeddings</span>
+                                                High-dimensional indexing of video transcripts using state-of-the-art transformer models to ensure semantic accuracy during retrieval.
+                                            </li>
+<li>
+<span class="font-bold text-primary block text-label-sm uppercase tracking-widest mb-1">2. Dynamic Context Slicing</span>
+                                                The engine segments video content into logical "concept shards" rather than fixed timestamps, optimizing the context window for the LLM.
+                                            </li>
+<li>
+<span class="font-bold text-primary block text-label-sm uppercase tracking-widest mb-1">3. Recursive Refinement</span>
+                                                A secondary pipeline loop that validates retrieved chunks against the original query to prune hallucination risks before final synthesis.
+                                            </li>
+</ul>
+<p class="text-body-md opacity-80 italic">Summary generated from 14 source nodes in 120ms.</p>
+</div>
+</div>
+<div class="mt-4 flex gap-4">
+<button class="text-label-sm uppercase tracking-widest text-secondary hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">content_copy</span> Copy
+                                    </button>
+<button class="text-label-sm uppercase tracking-widest text-secondary hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">ios_share</span> Share
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Interaction Dock -->
+<div class="fixed bottom-0 left-0 md:left-64 right-0 p-margin-desktop z-30">
+<div class="max-w-4xl mx-auto">
+<div class="bg-surface-container-lowest border border-primary p-2 flex items-center shadow-xl">
+<div class="flex-1 flex items-center px-4">
+<span class="material-symbols-outlined text-secondary mr-4">link</span>
+<input class="w-full bg-transparent border-none focus:ring-0 font-label-sm text-label-sm uppercase tracking-widest placeholder:text-outline" placeholder="PASTE YOUTUBE URL OR ASK A QUESTION..." type="text"/>
+</div>
+<div class="h-10 w-px bg-outline-variant mx-2"></div>
+<button class="px-8 py-3 bg-primary text-on-primary font-bold font-label-sm text-label-sm uppercase tracking-widest hover:opacity-90 transition-opacity flex items-center gap-2">
+                            Process <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="flex justify-center mt-4 gap-8">
+<span class="text-[10px] uppercase tracking-widest text-secondary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> GBT-4o-Turbo</span>
+<span class="text-[10px] uppercase tracking-widest text-secondary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> 128k Context</span>
+<span class="text-[10px] uppercase tracking-widest text-secondary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Munich Region</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        // Subtle entrance animation for chat bubbles
+        document.addEventListener('DOMContentLoaded', () => {
+            const items = document.querySelectorAll('.max-w-xl, .max-w-2xl');
+            items.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.15}s`;
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
+
+        // Toggle focus state on dock
+        const input = document.querySelector('input');
+        const dock = input.closest('.bg-surface-container-lowest');
+        input.addEventListener('focus', () => {
+            dock.style.borderColor = '#000';
+            dock.style.borderWidth = '2px';
+            dock.style.padding = '1px'; // Compensate for border growth
+        });
+        input.addEventListener('blur', () => {
+            dock.style.borderColor = '#000';
+            dock.style.borderWidth = '1px';
+            dock.style.padding = '2px';
+        });
+    </script>
+</body></html>

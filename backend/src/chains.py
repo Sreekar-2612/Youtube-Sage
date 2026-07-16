@@ -2,14 +2,17 @@ from typing import List
 from operator import itemgetter
 
 from langchain_core.documents import Document
-from langchain_core.output_parser import StrOutputParser , PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableParallel, RunnableSequence, RunnableLambda, RunnableBranch, RunnablePassthrough
-
+from langchain_core.output_parsers import StrOutputParser, PydanticOutputParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import (
+    RunnableParallel,
+    RunnablePassthrough,
+    RunnableLambda,
+    RunnableBranch,
+)
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from pydantic import BaseModel, Field
-
 
 class VideoAnswer(BaseModel):
     answer : str = Field(
@@ -98,7 +101,7 @@ def build_rag_chain(llm, retriever):
 
 # chat memory
 
-_session_store = []
+_session_store = {}
 
 def get_session_history(session_id : str) -> ChatMessageHistory:
     if session_id not in _session_store:

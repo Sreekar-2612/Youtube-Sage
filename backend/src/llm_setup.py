@@ -1,5 +1,6 @@
 # using two models one is using GROQ_API and another one is huggingface model api
 
+# pyrefly: ignore [missing-import]
 from langchain_groq import ChatGroq
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
@@ -31,6 +32,6 @@ def get_hf_llm(model_name: str, temperature: float = 0.5):
 def get_llm(provider : str, model_name:str, temperature: float = 0.5):
     if provider == "groq":
         return get_groq_llm(model_name,temperature)
-    elif provider == "hugggingface":
+    elif provider == "huggingface":
         return get_hf_llm(model_name,temperature)
     raise ValueError(f"Unknown provider: {provider}")

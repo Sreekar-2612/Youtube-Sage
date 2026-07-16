@@ -1,1 +1,25 @@
-.env 
+# API keys & environment files
+.env
+.env.*
+
+# Node / JS dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+
+# OS metadata
+.DS_Store
+Thumbs.db

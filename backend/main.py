@@ -1,3 +1,16 @@
+"""
+FastAPI backend for YT-Sage.
+
+This is the layer that turns our LangChain code into something a React
+frontend can talk to over HTTP. All the LCEL/RAG/memory logic from src/
+is unchanged from the core project -- only the delivery mechanism changed
+from Streamlit to a JSON API.
+
+Session model: each "Load video" call creates a session_id. That id maps to
+an in-memory dict holding the retriever/chain/agent for that video, AND
+(via src/chains.py's own session store) the conversational memory. The
+React app just needs to hold onto the session_id string.
+"""
 import uuid
 from typing import Optional, List
 
@@ -6,90 +19,114 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.config import GROQ_MODEL_OPTIONS, HF_MODEL_OPTIONS
-from src.youtube_loader import YoutubeTranscriptLoader
+from src.youtube_loader import YouTubeTranscriptLoader
 from src.text_processing import split_documents
 from src.vectorstore import build_vectorstore, get_retriever
 from src.llm_setup import get_llm
-from src.chains import build_conversational_chains, clear_session_history
+from src.chains import build_conversational_chain, clear_session_history, get_session_history
 from src.agent_tools import build_agent
 
+app = FastAPI(title="YT-Sage API")
 
-app = FastAPI(title = "YT-Sage API")
-
-# middleware is the code that sits between the incoming request and the backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ["*"],
-    allow_methods = ["*"],
-    allow_headers = ["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # session_id -> {"retriever", "chain", "agent", "video_id"}
-sessions = {}
+SESSIONS = {}
 
-# data coming to the backend
+
+import urllib.request
+import json
+from src.youtube_loader import extract_video_id
+
+
+def get_video_title(video_url: str) -> str:
+    try:
+        video_id = extract_video_id(video_url)
+        url = f"https://noembed.com/embed?url=https://www.youtube.com/watch?v={video_id}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            return data.get("title", f"Video {video_id}")
+    except Exception:
+        return "Loaded YouTube Stream"
+
+
 class LoadVideoRequest(BaseModel):
-    video_url:str
-    provider:str = "groq"
-    model_name:str
+    video_url: str
+    provider: str = "groq"          # "groq" | "huggingface"
+    model_name: str
 
-# data going back to the frontend
-# session_id → Which chat conversation does this belong to?
-# video_id   → Which YouTube video was processed?
-# num_chunks → How many transcript chunks were created?
+
 class LoadVideoResponse(BaseModel):
-    session_id:str
-    video_id:str
-    num_chunks:int 
+    session_id: str
+    video_id: str
+    num_chunks: int
+    title: str
+
 
 class ChatRequest(BaseModel):
-    session_id:str
-    question:str
-    use_agent:bool = False
+    session_id: str
+    question: str
+    use_agent: bool = False
+
 
 class ChatResponse(BaseModel):
-    answer:str
-    key_points:List[str] = []
+    answer: str
+    key_points: List[str] = []
     confidence: Optional[str] = None
 
+
 class ClearRequest(BaseModel):
-    session_id : str
+    session_id: str
+
 
 @app.get("/api/config")
 def get_config():
-    # lets the frontenfd populate provider/model dropdowns without hardcoding them
+    """Lets the frontend populate provider/model dropdowns without hardcoding them."""
     return {
-        "groq_models":GROQ_MODEL_OPTIONS,
-        "hf_models":HF_MODEL_OPTIONS
+        "groq_models": GROQ_MODEL_OPTIONS,
+        "hf_models": HF_MODEL_OPTIONS,
     }
 
-@app.post("/api/session/load", response_model = LoadVideoResponse)
-def load_video(req:LoadVideoRequest):
+
+@app.post("/api/session/load", response_model=LoadVideoResponse)
+def load_video(req: LoadVideoRequest):
     try:
-        loader = YoutubeTranscriptLoader(req.video_url)
+        loader = YouTubeTranscriptLoader(req.video_url)
         docs = loader.load()
         chunks = split_documents(docs)
         vectorstore = build_vectorstore(chunks)
         retriever = get_retriever(vectorstore)
 
-        llm = get_llm(req.provider,req.model_name)
+        llm = get_llm(req.provider, req.model_name)
 
-        session-id = str(uuid.uuid4())
-        SESSIONS[session_id] = {
-            "retriever":retriever,
-            "chain":build_conversational_chain(llm,retriever)
-            "agent":build_agent(llm,retriever)
-            "video_id":docs[0].,etadata["video_id"],
-        }
+        session_id = str(uuid.uuid4())
         
+        # Get video title
+        title = get_video_title(req.video_url)
+
+        SESSIONS[session_id] = {
+            "retriever": retriever,
+            "chain": build_conversational_chain(llm, retriever),
+            "agent": build_agent(llm, retriever),
+            "video_id": docs[0].metadata["video_id"],
+            "title": title,
+        }
+
         return LoadVideoResponse(
-            session_id = session_id,
-            video_id = docs[0].metadata["video_id"],
-            num_chunks = len(chunks)
+            session_id=session_id,
+            video_id=docs[0].metadata["video_id"],
+            num_chunks=len(chunks),
+            title=title,
         )
     except Exception as e:
-        raise HTTPException(status_code=400,detail=str(a))
-    
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
@@ -99,9 +136,12 @@ def chat(req: ChatRequest):
 
     try:
         if req.use_agent:
+            history = get_session_history(req.session_id)
             result = session["agent"].invoke(
-                {"question": req.question, "chat_history": []}
+                {"question": req.question, "chat_history": history.messages}
             )
+            history.add_user_message(req.question)
+            history.add_ai_message(result["output"])
             return ChatResponse(answer=result["output"])
 
         result = session["chain"].invoke(
@@ -125,4 +165,4 @@ def clear_session(req: ClearRequest):
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}   
+    return {"status": "ok"}
