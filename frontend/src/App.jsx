@@ -30,15 +30,58 @@ export default function App() {
     const [history, setHistory] = useState([]);
     const [sessionMessages, setSessionMessages] = useState({});
 
+    // Google Authentication state
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem("yt_sage_user");
+        return saved ? JSON.parse(saved) : null;
+    });
+    const [googleClientId, setGoogleClientId] = useState("");
+
     useEffect(() =>{
         api
         .getConfig()
         .then((cfg)=> {
             setConfig(cfg);
             setModelName(Object.values(cfg.groq_models)[0]);
+            if (cfg.google_client_id) {
+                setGoogleClientId(cfg.google_client_id);
+            }
         })
         .catch(() => setError("Couldn't reach the backend. Is it running on :8000?"));
     } , []);
+
+    useEffect(() => {
+        if (!user && googleClientId && window.google) {
+            window.google.accounts.id.initialize({
+                client_id: googleClientId,
+                callback: handleCredentialResponse
+            });
+            window.google.accounts.id.renderButton(
+                document.getElementById("google-signin-btn"),
+                { theme: "outline", size: "large", width: 280 }
+            );
+        }
+    }, [user, googleClientId]);
+
+    async function handleCredentialResponse(response) {
+        setError(null);
+        try {
+            const result = await api.verifyGoogleToken(response.credential);
+            setUser(result);
+            localStorage.setItem("yt_sage_user", JSON.stringify(result));
+        } catch (e) {
+            setError("Google login failed: " + e.message);
+        }
+    }
+
+    function handleSignOut() {
+        setUser(null);
+        localStorage.removeItem("yt_sage_user");
+        setSession(null);
+        setMessages([]);
+        setHistory([]);
+        setSessionMessages({});
+    }
 
     useEffect(() => {
         if(!config) return;
@@ -374,12 +417,56 @@ export default function App() {
         </div>
     );
 
+    if (!user) {
+        return (
+            <div className="w-screen h-screen flex items-center justify-center bg-background relative overflow-hidden select-none">
+                {/* Background Decorative Tech Lines/Glows */}
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full filter blur-[120px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/5 rounded-full filter blur-[120px]"></div>
+                
+                <div className="bg-white tech-border border-t-8 border-t-primary p-10 max-w-md w-full shadow-2xl rounded text-center z-10">
+                    <h1 className="font-display-lg text-3xl font-black text-primary tracking-wider uppercase mb-2">YouYap</h1>
+                    <p className="font-label-technical text-xs text-on-surface-variant uppercase font-semibold mb-6">🔥 WAR-ZONE // SECURE GATEWAY</p>
+                    
+                    <div className="my-8 flex flex-col items-center justify-center p-6 border border-dashed border-outline-variant bg-surface-container-low rounded min-h-[140px]">
+                        <span className="material-symbols-outlined text-4xl text-primary animate-pulse mb-3">lock_open</span>
+                        <p className="font-label-technical text-[10px] text-on-surface-variant uppercase tracking-wider mb-6 text-center">
+                            Authentication Required for Dashboard Access
+                        </p>
+                        
+                        {googleClientId ? (
+                            <div id="google-signin-btn" className="w-[280px] h-[40px] flex justify-center"></div>
+                        ) : (
+                            <div className="flex flex-col items-center gap-2">
+                                <span className="text-[10px] text-secondary font-black uppercase text-xs">Configuration Missing</span>
+                                <p className="font-body-md text-[11px] text-on-surface-variant leading-relaxed max-w-[240px]">
+                                    Please add <code>GOOGLE_CLIENT_ID</code> to your backend <code>.env</code> file.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <p className="text-[9px] text-on-surface-variant font-label-technical opacity-60 mt-4 leading-relaxed uppercase">
+                        Authorized Personnel Only. Actions Are Logged.
+                    </p>
+                </div>
+
+                {/* Styled Toast Error inside login */}
+                {error && (
+                    <div className="fixed bottom-6 right-6 bg-secondary text-on-secondary px-4 py-3 border border-secondary text-xs uppercase font-bold z-50 shadow-2xl">
+                        {error}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-background text-on-background font-body-md text-body-md">
             {/* Sidebar Navigation */}
             <aside className="hidden md:flex flex-col h-full p-4 gap-4 bg-surface border-r border-outline-variant w-64 z-50">
                 <div className="px-4 py-6">
-                    <h1 className="font-display-lg text-2xl font-black text-primary uppercase tracking-wider">YT-SAGE</h1>
+                    <h1 className="font-display-lg text-2xl font-black text-primary uppercase tracking-wider">YouYap</h1>
                     <p className="font-label-technical text-xs text-on-surface-variant opacity-70">V3.4 Stable</p>
                 </div>
                 <nav className="flex-1 flex flex-col gap-2">
@@ -477,8 +564,24 @@ export default function App() {
                     </div>
                     <div className="flex items-center gap-6">
                         <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
-                        <div className="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
-                            <span className="material-symbols-outlined">account_circle</span>
+                        <div className="flex items-center gap-3">
+                            <img 
+                                src={user?.picture} 
+                                alt={user?.name} 
+                                className="w-8 h-8 rounded-full border border-primary shadow-sm"
+                                referrerPolicy="no-referrer"
+                            />
+                            <div className="hidden lg:flex flex-col text-left">
+                                <span className="font-label-technical text-xs font-bold text-on-surface leading-none mb-0.5">{user?.name}</span>
+                                <span className="font-label-technical text-[9px] text-on-surface-variant opacity-70 leading-none">{user?.email}</span>
+                            </div>
+                            <button 
+                                onClick={handleSignOut}
+                                className="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors cursor-pointer ml-1 outline-none"
+                                title="Sign Out"
+                            >
+                                logout
+                            </button>
                         </div>
                     </div>
                 </header>

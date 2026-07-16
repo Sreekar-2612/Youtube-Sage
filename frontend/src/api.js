@@ -32,4 +32,11 @@ export const api = {
             body:JSON.stringify({session_id}),
         }).then(handle),
 
+    verifyGoogleToken: (id_token) =>
+        fetch(`${BASE_URL}/api/auth/google`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id_token }),
+        }).then(handle),
+
 };

@@ -12,11 +12,21 @@ an in-memory dict holding the retriever/chain/agent for that video, AND
 React app just needs to hold onto the session_id string.
 """
 import uuid
+import os
 from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from dotenv import load_dotenv
+
+# Load env variables using absolute path relative to main.py
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, ".env")
+load_dotenv(dotenv_path=env_path, override=True)
 
 from src.config import GROQ_MODEL_OPTIONS, HF_MODEL_OPTIONS
 from src.youtube_loader import YouTubeTranscriptLoader
@@ -85,13 +95,41 @@ class ClearRequest(BaseModel):
     session_id: str
 
 
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+
+
 @app.get("/api/config")
 def get_config():
     """Lets the frontend populate provider/model dropdowns without hardcoding them."""
     return {
         "groq_models": GROQ_MODEL_OPTIONS,
         "hf_models": HF_MODEL_OPTIONS,
+        "google_client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
     }
+
+
+@app.post("/api/auth/google")
+def google_auth(req: GoogleAuthRequest):
+    try:
+        client_id = os.getenv("GOOGLE_CLIENT_ID")
+        # Verify OAuth token
+        idinfo = id_token.verify_oauth2_token(req.id_token, requests.Request(), client_id)
+        
+        # Extract validated user profile details
+        userid = idinfo['sub']
+        email = idinfo.get('email')
+        name = idinfo.get('name')
+        picture = idinfo.get('picture')
+        
+        return {
+            "email": email,
+            "name": name,
+            "picture": picture,
+            "userid": userid
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid Google ID Token: {str(e)}")
 
 
 @app.post("/api/session/load", response_model=LoadVideoResponse)

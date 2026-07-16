@@ -10,3 +10,4 @@ youtube-transcript-api == 0.6.3
 python-dotenv == 1.0.1
 pydantic == 2.10.4
 huggingface_hub == 0.27.1
+google-auth == 2.29.0
