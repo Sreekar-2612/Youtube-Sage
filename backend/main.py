@@ -35,6 +35,7 @@ from src.vectorstore import build_vectorstore, get_retriever
 from src.llm_setup import get_llm
 from src.chains import build_conversational_chain, clear_session_history, get_session_history
 from src.agent_tools import build_agent
+from langchain_core.documents import Document
 
 app = FastAPI(title="YT-Sage API")
 
@@ -135,6 +136,29 @@ def google_auth(req: GoogleAuthRequest):
 @app.post("/api/session/load", response_model=LoadVideoResponse)
 def load_video(req: LoadVideoRequest):
     try:
+        if req.video_url == "temp-chat":
+            docs = [Document(page_content="Temporary general chat session. You can ask anything.", metadata={"video_id": "temp-chat", "source": "temp-chat"})]
+            chunks = docs
+            vectorstore = build_vectorstore(chunks)
+            retriever = get_retriever(vectorstore)
+            llm = get_llm(req.provider, req.model_name)
+            session_id = str(uuid.uuid4())
+            title = "Temporary Chat"
+            
+            SESSIONS[session_id] = {
+                "retriever": retriever,
+                "chain": build_conversational_chain(llm, retriever),
+                "agent": build_agent(llm, retriever),
+                "video_id": "temp-chat",
+                "title": title,
+            }
+            return LoadVideoResponse(
+                session_id=session_id,
+                video_id="temp-chat",
+                num_chunks=0,
+                title=title,
+            )
+
         loader = YouTubeTranscriptLoader(req.video_url)
         docs = loader.load()
         chunks = split_documents(docs)

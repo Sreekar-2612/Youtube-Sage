@@ -141,11 +141,6 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
         <h3 className="font-headline-md text-xs font-bold uppercase tracking-tight text-on-surface flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-sm">chat_bubble</span> {session?.title || "Neural Analysis Feed"}
         </h3>
-        <div className="flex gap-2">
-          <span className="bg-primary-container/10 text-primary px-3 py-1 font-label-technical text-[10px] rounded border border-primary-container/30 uppercase">
-            {useAgent ? "Agent Active" : "High Confidence"}
-          </span>
-        </div>
       </div>
 
       {/* Main chat body scroll */}

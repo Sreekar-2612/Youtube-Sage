@@ -62,6 +62,16 @@ def build_condense_chain(llm):
     )
     return condense_chain
 
+CUSTOM_FORMAT_INSTRUCTIONS = (
+    "Provide your response in JSON format conforming to this structure:\n"
+    "{\n"
+    "  \"answer\": \"A direct, well-formed, professional answer to the user's question as a string\",\n"
+    "  \"key_points\": [\"5-6 short bullet points summarizing the answer as strings\"],\n"
+    "  \"confidence\": \"One of: high, medium, low\"\n"
+    "}\n"
+    "Ensure the response is valid JSON. Do NOT repeat the schema. Do NOT output 'properties' or 'type' definitions. Output ONLY the JSON instance."
+)
+
 ANSWER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -75,10 +85,15 @@ ANSWER_PROMPT = ChatPromptTemplate.from_messages(
         MessagesPlaceholder("chat_history"),
         ("human","{question}"),
     ]
-).partial(format_instructions = structured_parser.get_format_instructions())
+).partial(format_instructions=CUSTOM_FORMAT_INSTRUCTIONS)
 
 def build_rag_chain(llm, retriever):
     condense_chain = build_condense_chain(llm)
+
+    try:
+        structured_llm = llm.with_structured_output(VideoAnswer)
+    except Exception:
+        structured_llm = llm | structured_parser
 
     chain = (
         RunnableParallel(
@@ -95,7 +110,7 @@ def build_rag_chain(llm, retriever):
                 "chat_history":itemgetter("chat_history"),
             }
         )
-        | ANSWER_PROMPT | llm | structured_parser
+        | ANSWER_PROMPT | structured_llm
     )
     return chain
 
