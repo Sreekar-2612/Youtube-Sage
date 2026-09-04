@@ -698,10 +698,6 @@ export default function App() {
                 <div className="workspace-status">
                     <span className="status-live"><i></i> Studio Session <b>#RAG-8842-LC</b></span>
                     <span className="status-indexed">● Indexed · {session ? `${session.num_chunks} Chunks Synchronized` : "Awaiting Source"}</span>
-                    <div className="status-actions">
-                        <button onClick={handleExportChat} disabled={messages.length === 0}>↗ Export Dossier</button>
-                        <button onClick={handlePingServer}>⌁ Publish Node</button>
-                    </div>
                 </div>
 
                 {/* Content Area */}

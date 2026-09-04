@@ -127,7 +127,7 @@ body { background: #f7f6f1; }
 .engine-stats strong { display: block; margin: 3px 0; color: var(--teal); font: 800 20px var(--display); }
 .engine-stats small { font: 8px var(--mono); }
 .engine-stats em { color: #80a99d; font-size: 6px; }
-.engine-footer { display: flex; justify-content: space-between; padding-top: 10px; color: #728080; font: 7px var(--mono); }
+.engine-footer { display: none; }
 .workspace-content > .col-span-12.lg\:col-span-4 > section img {
     filter: grayscale(.05) contrast(1.02);
 }

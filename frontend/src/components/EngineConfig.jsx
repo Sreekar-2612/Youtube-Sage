@@ -100,10 +100,6 @@ export default function EngineConfig({
             <em>Live Cluster</em>
           </div>
         </div>
-        <div className="engine-footer">
-          <span>↻ Flush Memory Cache</span>
-          <span>RAM: 1.2 GB</span>
-        </div>
       </div>
     </section>
   );
