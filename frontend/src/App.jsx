@@ -90,15 +90,31 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        if (!user && googleClientId && window.google) {
-            window.google.accounts.id.initialize({
-                client_id: googleClientId,
-                callback: handleCredentialResponse
-            });
-            window.google.accounts.id.renderButton(
-                document.getElementById("google-signin-btn"),
-                { theme: "outline", size: "large", width: 280 }
-            );
+        if (!user && googleClientId) {
+            const interval = setInterval(() => {
+                const btnContainer = document.getElementById("google-signin-btn");
+                if (window.google?.accounts?.id && btnContainer) {
+                    clearInterval(interval);
+                    try {
+                        window.google.accounts.id.initialize({
+                            client_id: googleClientId,
+                            callback: handleCredentialResponse
+                        });
+                        window.google.accounts.id.renderButton(
+                            btnContainer,
+                            { theme: "outline", size: "large", width: 280 }
+                        );
+                    } catch (err) {
+                        console.error("Google sign-in render error:", err);
+                    }
+                }
+            }, 200);
+
+            const timeout = setTimeout(() => clearInterval(interval), 10000);
+            return () => {
+                clearInterval(interval);
+                clearTimeout(timeout);
+            };
         }
     }, [user, googleClientId]);
 
@@ -111,6 +127,17 @@ export default function App() {
         } catch (e) {
             setError("Google login failed: " + e.message);
         }
+    }
+
+    function handleGuestLogin() {
+        const guestUser = {
+            name: "Guest Operator",
+            email: "guest@youyap.ai",
+            picture: "https://api.dicebear.com/7.x/bottts/svg?seed=guest",
+            userid: "guest-" + Math.random().toString(36).substring(7)
+        };
+        setUser(guestUser);
+        localStorage.setItem("yt_sage_user", JSON.stringify(guestUser));
     }
 
     function handleSignOut() {
@@ -487,16 +514,23 @@ export default function App() {
                             Authentication Required for Dashboard Access
                         </p>
 
-                        {googleClientId ? (
-                            <div id="google-signin-btn" className="w-[280px] h-[40px] flex justify-center"></div>
-                        ) : (
-                            <div className="flex flex-col items-center gap-2">
-                                <span className="text-[10px] text-secondary font-black uppercase text-xs">Configuration Missing</span>
-                                <p className="font-body-md text-[11px] text-on-surface-variant leading-relaxed max-w-[240px]">
-                                    Please add <code>GOOGLE_CLIENT_ID</code> to your backend <code>.env</code> file.
-                                </p>
+                        <div className="flex flex-col items-center gap-3 w-full">
+                            <div id="google-signin-btn" className="w-[280px] min-h-[40px] flex justify-center"></div>
+                            
+                            <div className="flex items-center gap-2 w-[280px] my-1 opacity-40">
+                                <div className="flex-1 h-px bg-outline"></div>
+                                <span className="font-label-technical text-[9px] uppercase tracking-widest text-on-surface-variant">OR</span>
+                                <div className="flex-1 h-px bg-outline"></div>
                             </div>
-                        )}
+
+                            <button
+                                onClick={handleGuestLogin}
+                                className="w-[280px] py-2.5 px-4 border-2 border-primary bg-primary/5 hover:bg-primary hover:text-white font-label-technical text-xs font-bold text-primary uppercase rounded flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-base">person</span>
+                                Continue as Guest / Demo
+                            </button>
+                        </div>
                     </div>
 
                     <p className="text-[9px] text-on-surface-variant font-label-technical opacity-60 mt-4 leading-relaxed uppercase">
