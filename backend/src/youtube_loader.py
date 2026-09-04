@@ -8,6 +8,8 @@ instead of relying purely on the built-in YoutubeLoader, so you can explain
 in an interview exactly how a loader is implemented internally.
 """
 import re
+import urllib.request
+import json
 from typing import List
 
 from langchain_core.documents import Document
@@ -29,13 +31,13 @@ def extract_video_id(url_or_id: str) -> str:
 
 
 class YouTubeTranscriptLoader(BaseLoader):
-    """Custom Document Loader for YouTube transcripts."""
+    """Custom Document Loader for YouTube transcripts with cloud resilience fallbacks."""
 
     def __init__(self, video_url: str, languages: List[str] = None):
         self.video_id = extract_video_id(video_url)
         self.languages = languages or ["en"]
 
-    def load(self) -> List[Document]:
+    def _fetch_from_youtube_transcript_api(self) -> tuple[str, int]:
         api = YouTubeTranscriptApi()
         try:
             transcript = api.fetch(self.video_id, languages=self.languages)
@@ -43,24 +45,71 @@ class YouTubeTranscriptLoader(BaseLoader):
         except TranscriptsDisabled:
             raise RuntimeError("Transcripts are disabled for this video.")
         except Exception:
-            try:
-                transcripts = api.list(self.video_id)
-                first_transcript = next(iter(transcripts))
-                transcript_list = first_transcript.fetch().to_raw_data()
-            except Exception as e:
-                raise RuntimeError(f"Could not retrieve transcript for video {self.video_id}: {str(e)}")
+            transcripts = api.list(self.video_id)
+            first_transcript = next(iter(transcripts))
+            transcript_list = first_transcript.fetch().to_raw_data()
 
         full_text = " ".join(chunk["text"] for chunk in transcript_list)
+        return full_text, len(transcript_list)
 
-        # One Document per video; the text splitter downstream will chunk it.
-        # We keep timestamped chunks in metadata for potential future features
-        # (e.g. jump-to-timestamp), which is a nice thing to mention in an interview.
+    def _fetch_from_fallback_service(self) -> tuple[str, int]:
+        """Fallback for cloud server environments where YouTube blocks datacenter IPs."""
+        url = f"https://youtube-transcript.ai/transcript/{self.video_id}.txt"
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            raw_text = resp.read().decode("utf-8")
+
+        lines = raw_text.splitlines()
+        cleaned = []
+        for line in lines:
+            l = line.strip()
+            if (
+                not l
+                or l.startswith("#")
+                or l.startswith("Source video:")
+                or l.startswith("Language:")
+                or l.startswith("Other available")
+                or l.startswith("To request")
+                or l.startswith("Interactive version")
+            ):
+                continue
+            # Remove timestamp prefixes like [00:15]
+            cleaned.append(re.sub(r"^\[\d+:\d+(?::\d+)?\]\s*", "", l))
+
+        if not cleaned:
+            raise RuntimeError(f"No transcript content found via fallback for video {self.video_id}")
+
+        return " ".join(cleaned), len(cleaned)
+
+    def load(self) -> List[Document]:
+        full_text = None
+        num_segments = 0
+
+        # Tier 1: Try standard YouTubeTranscriptApi
+        try:
+            full_text, num_segments = self._fetch_from_youtube_transcript_api()
+        except Exception as e:
+            # Tier 2: Fall back to cloud-resilient scraper service
+            try:
+                full_text, num_segments = self._fetch_from_fallback_service()
+            except Exception as fallback_err:
+                raise RuntimeError(
+                    f"Could not retrieve transcript for video {self.video_id}. "
+                    f"Primary: {str(e)} | Fallback: {str(fallback_err)}"
+                )
+
         doc = Document(
             page_content=full_text,
             metadata={
                 "source": f"https://www.youtube.com/watch?v={self.video_id}",
                 "video_id": self.video_id,
-                "num_transcript_segments": len(transcript_list),
+                "num_transcript_segments": num_segments,
             },
         )
-        return [doc]
+        return [doc]
