@@ -381,6 +381,8 @@ export default function App() {
                         setModelName={setModelName}
                         useAgent={useAgent}
                         setUseAgent={setUseAgent}
+                        lastLatency={lastLatency}
+                        lastThroughput={lastThroughput}
                     />
                 </>
             ) : activeView === "history" ? (
@@ -556,17 +558,18 @@ export default function App() {
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-background text-on-background font-body-md text-body-md">
             {/* Sidebar Navigation */}
-            <aside className="hidden md:flex flex-col h-full p-4 gap-4 bg-surface border-r border-outline-variant w-64 z-50">
-                <div className="px-4 py-6">
-                    <h1 className="font-display-lg text-primary uppercase tracking-wider text-3xl font-black">
-                        YT-SAGE
-                    </h1>
+            <aside className="hidden md:flex app-rail flex-col h-full gap-4 bg-surface border-r border-outline-variant w-64 z-50">
+                <div className="rail-brand">
+                    <h1 className="font-display-lg text-primary uppercase tracking-wider text-3xl font-black">YT-SAGE</h1>
+                    <span className="rail-brand-mark">YS</span>
+                    <span className="rail-version">V3.4 Stable</span>
                 </div>
-                <nav className="flex-1 flex flex-col gap-2">
+                <nav className="rail-nav flex-1 flex flex-col gap-2">
                     {/* Navigation Links */}
                     <button
                         onClick={() => setActiveView("source")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded border-2 transition-all w-full text-left outline-none ${activeView === "source"
+                        title="Source"
+                        className={`rail-nav-button flex items-center gap-3 px-4 py-3 rounded border-2 transition-all w-full text-left outline-none ${activeView === "source"
                             ? "bg-primary text-on-primary border-primary shadow-[4px_0px_0px_0px_rgba(184,19,17,1)]"
                             : "text-on-surface-variant border-transparent hover:bg-surface-variant"
                             }`}
@@ -576,7 +579,8 @@ export default function App() {
                     </button>
                     <button
                         onClick={() => setActiveView("history")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded border-2 transition-all w-full text-left outline-none ${activeView === "history"
+                        title="History"
+                        className={`rail-nav-button flex items-center gap-3 px-4 py-3 rounded border-2 transition-all w-full text-left outline-none ${activeView === "history"
                             ? "bg-primary text-on-primary border-primary shadow-[4px_0px_0px_0px_rgba(184,19,17,1)]"
                             : "text-on-surface-variant border-transparent hover:bg-surface-variant"
                             }`}
@@ -586,7 +590,8 @@ export default function App() {
                     </button>
                     <button
                         onClick={() => setActiveView("metrics")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded border-2 transition-all w-full text-left outline-none ${activeView === "metrics"
+                        title="Metrics"
+                        className={`rail-nav-button flex items-center gap-3 px-4 py-3 rounded border-2 transition-all w-full text-left outline-none ${activeView === "metrics"
                             ? "bg-primary text-on-primary border-primary shadow-[4px_0px_0px_0px_rgba(184,19,17,1)]"
                             : "text-on-surface-variant border-transparent hover:bg-surface-variant"
                             }`}
@@ -595,11 +600,12 @@ export default function App() {
                         <span className="font-label-technical text-xs uppercase font-semibold">Metrics</span>
                     </button>
                 </nav>
-                <div className="mt-auto p-4 flex flex-col gap-4">
+                <div className="rail-actions mt-auto p-4 flex flex-col gap-4">
                     <button
                         onClick={handleExportChat}
                         disabled={messages.length === 0}
-                        className={`w-full font-button-text text-xs uppercase py-3 rounded border-2 transition-all duration-100 font-bold ${messages.length === 0
+                        title="Export chat"
+                        className={`rail-export w-full font-button-text text-xs uppercase py-3 rounded border-2 transition-all duration-100 font-bold ${messages.length === 0
                             ? "bg-outline text-on-surface-variant cursor-not-allowed border-outline opacity-50"
                             : "bg-secondary text-on-secondary border-secondary hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_#00acc1] cursor-pointer"
                             }`}
@@ -610,7 +616,8 @@ export default function App() {
                         <button
                             onClick={handleWipeMemoryClick}
                             disabled={!session}
-                            className={`flex items-center gap-3 px-4 py-2 font-label-technical text-xs transition-colors text-left outline-none ${!session
+                            title="Wipe memory"
+                            className={`rail-action flex items-center gap-3 px-4 py-2 font-label-technical text-xs transition-colors text-left outline-none ${!session
                                 ? "text-outline cursor-not-allowed opacity-50"
                                 : "text-on-surface-variant hover:text-secondary cursor-pointer"
                                 }`}
@@ -619,7 +626,8 @@ export default function App() {
                         </button>
                         <button
                             onClick={handlePingServer}
-                            className="flex items-center gap-3 px-4 py-2 text-on-surface-variant font-label-technical text-xs hover:text-primary transition-colors text-left outline-none cursor-pointer"
+                            title="Ping server"
+                            className="rail-action flex items-center gap-3 px-4 py-2 text-on-surface-variant font-label-technical text-xs hover:text-primary transition-colors text-left outline-none cursor-pointer"
                         >
                             <span className="material-symbols-outlined text-[16px]">sensors</span> Ping Server
                             {pingStatus !== "Idle" && (
@@ -640,12 +648,19 @@ export default function App() {
             {/* Main Workspace Container */}
             <main className="flex-1 flex flex-col h-full bg-background overflow-hidden relative">
                 {/* Top Navigation Bar */}
-                <header className="flex justify-between items-center px-8 w-full h-16 border-b border-outline-variant bg-surface z-40">
+                <header className="workspace-header flex justify-between items-center px-8 w-full h-16 border-b border-outline-variant bg-surface z-40">
                     <div className="flex items-center gap-4">
                         <span className="material-symbols-outlined text-primary">analytics</span>
-                        <span className="font-display-lg text-lg font-black tracking-widest text-on-surface">WORKSPACE_ALPHA</span>
+                        <div className="workspace-breadcrumb">
+                            <span className="font-display-lg text-lg font-black tracking-widest text-on-surface">YT-SAGE</span>
+                            <span>/</span><span>Workspace</span><span>/</span><strong>Video Intelligence</strong>
+                        </div>
                     </div>
                     <div className="flex items-center gap-6">
+                        <div className="workspace-search">
+                            <span className="material-symbols-outlined">search</span>
+                            <input aria-label="Global search" placeholder="Search dialogue, concepts, timestamps..." />
+                        </div>
                         <button 
                             onClick={() => setIsPrivate(!isPrivate)}
                             className={`material-symbols-outlined transition-colors cursor-pointer outline-none ${
@@ -680,8 +695,17 @@ export default function App() {
                     </div>
                 </header>
 
+                <div className="workspace-status">
+                    <span className="status-live"><i></i> Studio Session <b>#RAG-8842-LC</b></span>
+                    <span className="status-indexed">● Indexed · {session ? `${session.num_chunks} Chunks Synchronized` : "Awaiting Source"}</span>
+                    <div className="status-actions">
+                        <button onClick={handleExportChat} disabled={messages.length === 0}>↗ Export Dossier</button>
+                        <button onClick={handlePingServer}>⌁ Publish Node</button>
+                    </div>
+                </div>
+
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-6 grid grid-cols-12 gap-6 transition-all duration-300">
+                <div className="workspace-content flex-1 overflow-y-auto p-6 grid grid-cols-12 gap-6 transition-all duration-300">
                     {isSwapped ? rightColumn : leftColumn}
                     {isSwapped ? leftColumn : rightColumn}
                 </div>

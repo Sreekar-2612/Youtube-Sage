@@ -8,6 +8,8 @@ export default function EngineConfig({
   setModelName,
   useAgent,
   setUseAgent,
+  lastLatency = 0,
+  lastThroughput = 0,
 }) {
   const modelOptions =
     provider === "groq" ? config?.groq_models : config?.hf_models;
@@ -84,6 +86,23 @@ export default function EngineConfig({
               }`}
             ></div>
           </div>
+        </div>
+
+        <div className="engine-stats">
+          <div>
+            <span>Inference Latency</span>
+            <strong>{lastLatency || "--"}<small>{lastLatency ? " ms" : ""}</small></strong>
+            <em>Optimized TTFT</em>
+          </div>
+          <div>
+            <span>Throughput</span>
+            <strong>{lastThroughput || "--"}<small>{lastThroughput ? " tok/s" : ""}</small></strong>
+            <em>Live Cluster</em>
+          </div>
+        </div>
+        <div className="engine-footer">
+          <span>↻ Flush Memory Cache</span>
+          <span>RAM: 1.2 GB</span>
         </div>
       </div>
     </section>

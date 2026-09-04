@@ -126,12 +126,12 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
         maxWidth: "768px",
       }
     : {
-        position: "fixed",
-        bottom: "32px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "90%",
-        maxWidth: "768px",
+        position: "absolute",
+        bottom: "14px",
+        left: "30px",
+        transform: "none",
+        width: "calc(100% - 60px)",
+        maxWidth: "none",
       };
 
   return (
@@ -207,7 +207,7 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
         style={floatingStyle}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
-        className="z-30 p-2 bg-white bg-opacity-95 border border-outline rounded-lg shadow-2xl flex items-center gap-2 focus-within:border-primary transition-all select-none"
+        className="chat-dock z-30 p-2 bg-white bg-opacity-95 border border-outline rounded-lg shadow-2xl flex items-center gap-2 focus-within:border-primary transition-all select-none"
       >
         {/* Drag Handle */}
         <div className="drag-handle flex items-center justify-center cursor-grab active:cursor-grabbing p-1.5 text-outline-variant hover:text-primary">

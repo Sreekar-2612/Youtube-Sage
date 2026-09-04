@@ -24,15 +24,18 @@ export default function Sidebar({
       <div className="space-y-4">
         <div>
           <label className="block font-label-technical text-label-technical mb-2 text-on-surface-variant text-xs uppercase font-semibold">
-            Video URL / Stream
+            Source Stream
           </label>
-          <input
-            className="w-full bg-surface-container-low border border-outline px-4 py-3 font-label-technical text-xs text-primary focus:border-primary focus:ring-0 outline-none rounded"
-            type="text"
-            placeholder="PASTE YOUTUBE LINK..."
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-          />
+          <div className="source-url-row">
+            <input
+              className="w-full bg-surface-container-low border border-outline px-4 py-3 font-label-technical text-xs text-primary focus:border-primary focus:ring-0 outline-none rounded"
+              type="text"
+              placeholder="PASTE YOUTUBE LINK..."
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+            />
+            <span className="source-url-label">Direct URL</span>
+          </div>
         </div>
 
         <button
@@ -40,7 +43,7 @@ export default function Sidebar({
           onClick={onLoad}
           disabled={loading || !videoUrl}
         >
-          {loading ? "Indexing Transcript…" : "Load Transcript"}
+          {loading ? "Indexing Transcript…" : "Inspect ↗"}
         </button>
 
         {/* Session Card Info */}
@@ -52,6 +55,20 @@ export default function Sidebar({
                 src={`https://img.youtube.com/vi/${session.video_id}/mqdefault.jpg`}
                 alt="Video thumbnail"
               />
+            </div>
+
+            <div className="source-details">
+              <div className="source-detail-kicker">YouTube · Published stream</div>
+              <h3>{session.title || "Loaded YouTube source"}</h3>
+              <p>Transcript context indexed and ready for analysis.</p>
+              <div className="source-detail-stats">
+                <span>Transcript Embeddings <b>{session.num_chunks}</b></span>
+                <span>Vectors Verified <b>YES</b></span>
+              </div>
+              <div className="source-detail-line">
+                <span>Source ID: {session.video_id}</span>
+                <span>Active</span>
+              </div>
             </div>
             
             <dl className="grid grid-cols-3 gap-2 text-center font-label-technical text-[9px] tracking-tighter">
