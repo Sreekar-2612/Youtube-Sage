@@ -149,10 +149,10 @@ body { background: #f7f6f1; }
     padding: 18px 22px !important;
 }
 .chat-dock {
-    bottom: 14px !important;
-    left: 30px !important;
-    width: calc(100% - 60px) !important;
-    max-width: none !important;
+    bottom: 14px;
+    left: 30px;
+    width: calc(100% - 60px);
+    max-width: none;
     border-radius: 5px !important;
     box-shadow: 0 2px 8px rgba(30, 45, 45, .12) !important;
 }

@@ -20,7 +20,7 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
   // Drag Event Handlers for Mouse
   const handleMouseDown = (e) => {
     if (e.button !== 0) return; // Left click only
-    if (!e.target.classList.contains("drag-handle") && !e.target.closest(".drag-handle")) {
+    if (e.target.closest("input, button")) {
       return;
     }
     setIsDragging(true);
@@ -34,7 +34,7 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
 
   // Drag Event Handlers for Touch Devices
   const handleTouchStart = (e) => {
-    if (!e.target.classList.contains("drag-handle") && !e.target.closest(".drag-handle")) {
+    if (e.target.closest("input, button")) {
       return;
     }
     const touch = e.touches[0];
@@ -207,7 +207,7 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
         style={floatingStyle}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
-        className="chat-dock z-30 p-2 bg-white bg-opacity-95 border border-outline rounded-lg shadow-2xl flex items-center gap-2 focus-within:border-primary transition-all select-none"
+        className="chat-dock z-30 p-2 bg-white bg-opacity-95 border border-outline rounded-lg shadow-2xl flex items-center gap-2 focus-within:border-primary transition-all select-none cursor-grab active:cursor-grabbing"
       >
         {/* Drag Handle */}
         <div className="drag-handle flex items-center justify-center cursor-grab active:cursor-grabbing p-1.5 text-outline-variant hover:text-primary">
