@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar.jsx";
 import EngineConfig from "./components/EngineConfig.jsx";
 import ChatPanel from "./components/ChatPanel.jsx";
-import { api } from "./api.js";
+import { api, BASE_URL } from "./api.js";
 import "./App.css";
 
 export default function App() {
@@ -309,7 +309,7 @@ export default function App() {
         setPingStatus("Checking...");
         const startTime = Date.now();
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/config");
+            const response = await fetch(`${BASE_URL}/api/health`);
             if (response.ok) {
                 const latency = Date.now() - startTime;
                 setPingStatus(`Online (${latency}ms)`);

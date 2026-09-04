@@ -1,4 +1,4 @@
-const BASE_URL = "https://youtube-sage-backend.onrender.com"
+export const BASE_URL = (import.meta.env.VITE_API_URL || "https://youtube-sage-backend.onrender.com").replace(/\/+$/, "");
 
 async function handle(res) {
     if(!res.ok) {
@@ -39,4 +39,4 @@ export const api = {
             body: JSON.stringify({ id_token }),
         }).then(handle),
 
-};
+};

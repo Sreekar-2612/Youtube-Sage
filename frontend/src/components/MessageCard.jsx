@@ -1,4 +1,5 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 
 export default function MessageCard({ role, content, keyPoints, confidence, timestamp }) {
   const isUser = role === "user";
@@ -43,9 +44,9 @@ export default function MessageCard({ role, content, keyPoints, confidence, time
 
       {/* Bot Content Box */}
       <div className="bg-surface-container-low p-5 tech-border border-l-4 border-l-primary rounded-r-xl">
-        <p className="font-body-md text-xs text-on-surface whitespace-pre-wrap leading-relaxed">
-          {content}
-        </p>
+        <div className="font-body-md text-xs text-on-surface leading-relaxed space-y-2 prose prose-sm max-w-none">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
 
         {/* Key Insights Grid */}
         {keyPoints && keyPoints.length > 0 && (
