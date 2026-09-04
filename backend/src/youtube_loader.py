@@ -12,6 +12,7 @@ import urllib.request
 import json
 import logging
 from typing import List
+from urllib.parse import parse_qs, urlparse
 
 from langchain_core.documents import Document
 from langchain_community.document_loaders.base import BaseLoader
@@ -21,14 +22,26 @@ logger = logging.getLogger(__name__)
 
 def extract_video_id(url_or_id: str) -> str:
     """Accepts a full YouTube URL or a bare video ID and returns the video ID."""
-    patterns = [
-        r"(?:v=|youtu\.be/|embed/|shorts/)([0-9A-Za-z_-]{11}).*",
-        r"^([0-9A-Za-z_-]{11})$",
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, url_or_id)
-        if match:
-            return match.group(1)
+    value = url_or_id.strip()
+    if re.fullmatch(r"[0-9A-Za-z_-]{11}", value):
+        return value
+
+    # Accept links copied from watch, shorts, live, embed, mobile, and youtu.be.
+    parsed = urlparse(value if "://" in value else f"https://{value}")
+    hostname = (parsed.hostname or "").lower().removeprefix("www.")
+    if hostname == "youtu.be":
+        candidate = parsed.path.strip("/").split("/")[0]
+    elif hostname == "youtube.com" or hostname.endswith(".youtube.com"):
+        query_id = parse_qs(parsed.query).get("v", [""])[0]
+        path_parts = [part for part in parsed.path.split("/") if part]
+        candidate = query_id
+        if not candidate and len(path_parts) >= 2 and path_parts[0] in {"embed", "shorts", "live", "v"}:
+            candidate = path_parts[1]
+    else:
+        candidate = ""
+
+    if re.fullmatch(r"[0-9A-Za-z_-]{11}", candidate):
+        return candidate
     raise ValueError("Could not extract a valid YouTube video ID from input.")
 
 
@@ -191,4 +204,4 @@ class YouTubeTranscriptLoader(BaseLoader):
                 "num_transcript_segments": num_segments,
             },
         )
-        return [doc]
+        return [doc]

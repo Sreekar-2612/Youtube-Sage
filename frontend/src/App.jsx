@@ -86,7 +86,7 @@ export default function App() {
                     setGoogleClientId(cfg.google_client_id);
                 }
             })
-            .catch(() => setError("Couldn't reach the backend. Is it running on :8000?"));
+            .catch((e) => setError(`Couldn't reach the backend: ${e.message}`));
     }, []);
 
     useEffect(() => {
@@ -156,6 +156,11 @@ export default function App() {
     }, [provider, config]);
 
     async function handleLoad() {
+        const trimmedVideoUrl = videoUrl.trim();
+        if (!trimmedVideoUrl) {
+            setError("Paste a YouTube link first.");
+            return;
+        }
         setLoading(true);
         setError(null);
         setLastLatency(0);
@@ -163,7 +168,7 @@ export default function App() {
         setLastThroughput(0);
         setQueryCount(0);
         try {
-            const result = await api.loadVideo(videoUrl, provider, modelName);
+            const result = await api.loadVideo(trimmedVideoUrl, provider, modelName);
             setSession(result);
             setMessages([]);
 
