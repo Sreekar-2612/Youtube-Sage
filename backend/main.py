@@ -31,7 +31,7 @@ load_dotenv(dotenv_path=env_path, override=True)
 from src.config import GROQ_MODEL_OPTIONS, HF_MODEL_OPTIONS
 from src.youtube_loader import YouTubeTranscriptLoader
 from src.text_processing import split_documents
-from src.vectorstore import build_vectorstore, get_retriever
+from src.vectorstore import build_vectorstore, get_retriever, get_embeddings
 from src.llm_setup import get_llm
 from src.chains import build_conversational_chain, clear_session_history, get_session_history
 from src.agent_tools import build_agent
@@ -45,6 +45,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def startup_event():
+    # Pre-warm embedding model into RAM during container startup
+    try:
+        get_embeddings()
+    except Exception as e:
+        print("Embedding warm-up notice:", e)
 
 # session_id -> {"retriever", "chain", "agent", "video_id"}
 SESSIONS = {}
