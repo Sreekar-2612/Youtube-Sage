@@ -1,1 +1,58 @@
-/* Empty to prevent conflicts with Tailwind */
+body { background: var(--surface); }
+
+.tech-border { border: 1px solid #d7dfe0; }
+.tech-border-primary { border: 2px solid var(--teal-bright); }
+
+.bg-background { background: var(--surface) !important; }
+.bg-surface { background: #fff !important; }
+.bg-surface-container-low { background: var(--surface-low) !important; }
+.bg-surface-container { background: var(--surface-container) !important; }
+.bg-surface-variant { background: #e2e2e2 !important; }
+.text-on-background, .text-on-surface { color: var(--ink) !important; }
+.text-on-surface-variant { color: var(--ink-muted) !important; }
+.text-primary { color: var(--teal) !important; }
+.text-secondary { color: var(--red) !important; }
+.bg-primary { background: var(--teal) !important; }
+.bg-secondary { background: var(--red) !important; }
+.border-primary { border-color: var(--teal) !important; }
+.border-secondary { border-color: var(--red) !important; }
+.border-outline, .border-outline-variant { border-color: var(--outline-soft) !important; }
+
+.font-display-lg, .font-display-lg-mobile, .font-headline-md,
+.font-body-md, .font-body-lg, .font-button-text { font-family: var(--display) !important; }
+.font-label-technical { font-family: var(--mono) !important; }
+
+.shadow-sm { box-shadow: none !important; }
+.rounded, .rounded-lg, .rounded-xl, .rounded-r-xl, .rounded-l-xl,
+.rounded-b-xl { border-radius: 4px !important; }
+
+main > header { min-height: 64px; background: rgba(249, 249, 249, .96) !important; }
+main > header .font-display-lg { letter-spacing: .08em; }
+aside { background: var(--surface-container) !important; border-color: var(--outline-soft) !important; }
+aside button { border-radius: 4px !important; }
+aside button.bg-primary { box-shadow: 4px 0 0 var(--red); }
+
+input, select {
+    border-radius: 2px !important;
+    border-color: var(--outline) !important;
+    background: #fff !important;
+}
+input:focus, select:focus { border-width: 2px !important; border-color: var(--teal-bright) !important; }
+
+button.bg-primary, button.bg-secondary {
+    border-radius: 3px !important;
+    font-weight: 800;
+    letter-spacing: .03em;
+}
+
+.hard-shadow-hover:hover {
+    box-shadow: 4px 4px 0 var(--red) !important;
+    transform: translate(-2px, -2px);
+}
+
+@media (max-width: 767px) {
+    main > header { padding: 0 16px !important; }
+    main > header .font-display-lg { font-size: 12px; letter-spacing: .04em; }
+    .grid.grid-cols-12 { padding: 16px !important; gap: 16px !important; }
+    aside { display: none !important; }
+}

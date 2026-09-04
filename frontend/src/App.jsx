@@ -558,9 +558,8 @@ export default function App() {
             {/* Sidebar Navigation */}
             <aside className="hidden md:flex flex-col h-full p-4 gap-4 bg-surface border-r border-outline-variant w-64 z-50">
                 <div className="px-4 py-6">
-                    <h1 className="font-display-lg text-primary uppercase tracking-wider flex items-baseline">
-                        <span className="text-2xl font-semibold normal-case" style={{ fontFamily: "'Brush Script MT', 'Brush Script SDK', cursive" }}>You</span>
-                        <span className="text-3xl font-black ml-0.5">Yap</span>
+                    <h1 className="font-display-lg text-primary uppercase tracking-wider text-3xl font-black">
+                        YT-SAGE
                     </h1>
                 </div>
                 <nav className="flex-1 flex flex-col gap-2">
@@ -644,7 +643,7 @@ export default function App() {
                 <header className="flex justify-between items-center px-8 w-full h-16 border-b border-outline-variant bg-surface z-40">
                     <div className="flex items-center gap-4">
                         <span className="material-symbols-outlined text-primary">analytics</span>
-                        <span className="font-display-lg text-lg font-black tracking-widest text-on-surface">🔥 WAR-ZONE // ACTIVE</span>
+                        <span className="font-display-lg text-lg font-black tracking-widest text-on-surface">WORKSPACE_ALPHA</span>
                     </div>
                     <div className="flex items-center gap-6">
                         <button 
