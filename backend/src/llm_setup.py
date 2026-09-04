@@ -14,6 +14,7 @@ def get_groq_llm(model_name : str, temperature: float = 0.5):
         model = model_name,
         api_key = GROQ_API_KEY,
         temperature = temperature,
+        max_tokens = 768,
         streaming = True
     )
 
