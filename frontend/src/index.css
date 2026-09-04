@@ -1,16 +1,16 @@
 :root {
-    --surface: #f9f9f9;
-    --surface-low: #f3f3f3;
-    --surface-container: #eeeeee;
-    --surface-high: #e8e8e8;
-    --ink: #1a1c1c;
-    --ink-muted: #3d494b;
-    --outline: #6d797c;
-    --outline-soft: #bcc9cc;
-    --teal: #006876;
-    --teal-bright: #00acc1;
-    --red: #b81311;
-    --red-bright: #dc3128;
+    --surface: #f7f6f1;
+    --surface-low: #f0f0eb;
+    --surface-container: #e8e8e2;
+    --surface-high: #dedfd9;
+    --ink: #101719;
+    --ink-muted: #536164;
+    --outline: #7c8989;
+    --outline-soft: #cbd2cf;
+    --teal: #006c78;
+    --teal-bright: #08aabd;
+    --red: #c90d0d;
+    --red-bright: #e1221c;
     --mono: "JetBrains Mono", monospace;
     --display: "Montserrat", sans-serif;
 }
