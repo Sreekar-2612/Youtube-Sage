@@ -13,15 +13,21 @@ React app just needs to hold onto the session_id string.
 """
 import uuid
 import os
+import logging
 from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from google.oauth2 import id_token
-from google.auth.transport import requests
 from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 # Load env variables using absolute path relative to main.py
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -42,6 +48,7 @@ app = FastAPI(title="YT-Sage API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -121,9 +128,14 @@ def get_config():
 @app.post("/api/auth/google")
 def google_auth(req: GoogleAuthRequest):
     try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+
         client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not client_id:
+            raise HTTPException(status_code=500, detail="Google Client ID not configured.")
         # Verify OAuth token
-        idinfo = id_token.verify_oauth2_token(req.id_token, requests.Request(), client_id)
+        idinfo = id_token.verify_oauth2_token(req.id_token, google_requests.Request(), client_id)
         
         # Extract validated user profile details
         userid = idinfo['sub']
@@ -143,6 +155,7 @@ def google_auth(req: GoogleAuthRequest):
 
 @app.post("/api/session/load", response_model=LoadVideoResponse)
 def load_video(req: LoadVideoRequest):
+    logger.info(f"Loading video: {req.video_url} (provider={req.provider}, model={req.model_name})")
     try:
         if req.video_url == "temp-chat":
             docs = [Document(page_content="Temporary general chat session. You can ask anything.", metadata={"video_id": "temp-chat", "source": "temp-chat"})]
@@ -195,6 +208,7 @@ def load_video(req: LoadVideoRequest):
             title=title,
         )
     except Exception as e:
+        logger.error(f"Failed to load video: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
