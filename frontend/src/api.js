@@ -61,4 +61,61 @@ export const api = {
             body: JSON.stringify({ id_token }),
         }).then(handle),
 
+    chatStream: async (session_id, question, use_agent, onToken, onDone, onError) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/chat/stream`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ session_id, question, use_agent }),
+            });
+
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                throw new Error(errBody.detail || `Stream request failed: ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulated = "";
+            let buffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n\n");
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || !trimmed.startsWith("data:")) continue;
+                    const dataStr = trimmed.slice(5).trim();
+                    if (dataStr === "[DONE]") {
+                        if (onDone) onDone(accumulated);
+                        return accumulated;
+                    }
+
+                    try {
+                        const parsed = JSON.parse(dataStr);
+                        if (parsed.error) {
+                            throw new Error(parsed.error);
+                        }
+                        if (parsed.token) {
+                            accumulated += parsed.token;
+                            if (onToken) onToken(parsed.token, accumulated);
+                        }
+                    } catch (e) {
+                        console.warn("SSE chunk parse warning:", e);
+                    }
+                }
+            }
+
+            if (onDone) onDone(accumulated);
+            return accumulated;
+        } catch (err) {
+            if (onError) onError(err);
+            else throw err;
+        }
+    },
 };

@@ -1,7 +1,42 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 
-export default function MessageCard({ role, content, keyPoints, confidence, timestamp }) {
+function CodeBlock({ children, className }) {
+  const [copied, setCopied] = React.useState(false);
+  const match = /language-(\w+)/.exec(className || "");
+  const language = match ? match[1] : "code";
+  const codeText = String(children).replace(/\n$/, "");
+
+  const handleCopy = () => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(codeText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div className="my-3 rounded overflow-hidden tech-border bg-[#101719] text-[#e0e8e8] shadow-sm">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[#1b2326] border-b border-[#2d3a3d] text-[10px] font-label-technical">
+        <span className="uppercase tracking-wider text-primary font-bold">{language}</span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="flex items-center gap-1 text-[10px] text-[#93a2a5] hover:text-white transition-colors cursor-pointer"
+          title="Copy code to clipboard"
+        >
+          <span className="material-symbols-outlined text-[13px]">{copied ? "check" : "content_copy"}</span>
+          <span>{copied ? "Copied!" : "Copy"}</span>
+        </button>
+      </div>
+      <pre className="p-3 overflow-x-auto font-label-technical text-xs leading-relaxed m-0 bg-transparent text-[#e0e8e8]">
+        <code>{codeText}</code>
+      </pre>
+    </div>
+  );
+}
+
+export default function MessageCard({ role, content, keyPoints, confidence, timestamp, onSeek }) {
   const isUser = role === "user";
 
   if (isUser) {
@@ -22,6 +57,17 @@ export default function MessageCard({ role, content, keyPoints, confidence, time
       </div>
     );
   }
+
+  // Pre-process markdown to convert timestamp citations like [02:15] to markdown links
+  const processedContent = (content || "").replace(/\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]/g, (match, p1, p2, p3) => {
+    let totalSec = 0;
+    if (p3 !== undefined) {
+      totalSec = parseInt(p1, 10) * 3600 + parseInt(p2, 10) * 60 + parseInt(p3, 10);
+    } else {
+      totalSec = parseInt(p1, 10) * 60 + parseInt(p2, 10);
+    }
+    return `[${match}](#seek=${totalSec})`;
+  });
 
   // AI Response Styling
   return (
@@ -45,7 +91,43 @@ export default function MessageCard({ role, content, keyPoints, confidence, time
       {/* Bot Content Box */}
       <div className="bg-surface-container-low p-5 tech-border border-l-4 border-l-primary rounded-r-xl">
         <div className="font-body-md text-xs text-on-surface leading-relaxed space-y-2 prose prose-sm max-w-none">
-          <ReactMarkdown>{content}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              a: ({ href, children, ...props }) => {
+                if (href && href.startsWith("#seek=")) {
+                  const seconds = parseInt(href.replace("#seek=", ""), 10);
+                  return (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (onSeek) onSeek(seconds);
+                      }}
+                      className="inline-flex items-center gap-1 mx-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-label-technical text-[10px] font-bold hover:bg-primary hover:text-white transition-all cursor-pointer"
+                      title={`Jump to ${children} in video`}
+                    >
+                      <span className="material-symbols-outlined text-[11px]">play_circle</span>
+                      {children}
+                    </button>
+                  );
+                }
+                return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline font-semibold" {...props}>{children}</a>;
+              },
+              code: ({ node, inline, className, children, ...props }) => {
+                const isBlock = Boolean(className) || String(children).includes("\n");
+                if (isBlock) {
+                  return <CodeBlock className={className}>{children}</CodeBlock>;
+                }
+                return (
+                  <code className="bg-surface-container-high px-1.5 py-0.5 rounded font-label-technical text-[11px] text-secondary font-semibold" {...props}>
+                    {children}
+                  </code>
+                );
+              }
+            }}
+          >
+            {processedContent}
+          </ReactMarkdown>
         </div>
 
         {/* Key Insights Grid */}

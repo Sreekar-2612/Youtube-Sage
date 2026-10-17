@@ -7,7 +7,27 @@ export default function Sidebar({
   loading,
   session,
   onClearMemory,
+  seekSeconds = 0,
 }) {
+  const [showPlayer, setShowPlayer] = React.useState(true);
+
+  React.useEffect(() => {
+    if (seekSeconds > 0) {
+      setShowPlayer(true);
+      const iframe = document.getElementById("yt-player-iframe");
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage(
+          JSON.stringify({ event: "command", func: "seekTo", args: [seekSeconds, true] }),
+          "*"
+        );
+        iframe.contentWindow.postMessage(
+          JSON.stringify({ event: "command", func: "playVideo", args: [] }),
+          "*"
+        );
+      }
+    }
+  }, [seekSeconds]);
+
   return (
     <section className="bg-white tech-border p-6 rounded shadow-sm">
       {/* Header */}
@@ -49,12 +69,33 @@ export default function Sidebar({
         {/* Session Card Info */}
         {session && (
           <div className="space-y-4 pt-2">
-            <div className="aspect-video bg-surface-container relative overflow-hidden rounded tech-border">
-              <img
-                className="w-full h-full object-cover grayscale-[0.2]"
-                src={`https://img.youtube.com/vi/${session.video_id}/mqdefault.jpg`}
-                alt="Video thumbnail"
-              />
+            <div className="aspect-video bg-black relative overflow-hidden rounded tech-border group">
+              {session.video_id && session.video_id !== "temp-chat" && showPlayer ? (
+                <iframe
+                  id="yt-player-iframe"
+                  className="w-full h-full border-0"
+                  src={`https://www.youtube-nocookie.com/embed/${session.video_id}?enablejsapi=1&autoplay=0${seekSeconds ? `&start=${seekSeconds}` : ''}`}
+                  title={session.title || "YouTube Player"}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <img
+                  className="w-full h-full object-cover grayscale-[0.1]"
+                  src={`https://img.youtube.com/vi/${session.video_id}/mqdefault.jpg`}
+                  alt="Video thumbnail"
+                />
+              )}
+              {session.video_id !== "temp-chat" && (
+                <button
+                  type="button"
+                  onClick={() => setShowPlayer(!showPlayer)}
+                  className="absolute bottom-2 right-2 bg-black/75 hover:bg-primary text-white text-[9px] font-label-technical px-2 py-0.5 rounded transition-colors uppercase cursor-pointer"
+                  title="Toggle player and thumbnail"
+                >
+                  {showPlayer ? "Thumbnail" : "Player"}
+                </button>
+              )}
             </div>
 
             <div className="source-details">

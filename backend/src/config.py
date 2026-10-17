@@ -16,10 +16,11 @@ HF_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", "")
 # Groq hosts open-weight models (Llama-3, Gemma-2, etc.) but serves them
 # on Groq's own LPU inference hardware -> extremely fast, free tier available.
 GROQ_MODEL_OPTIONS = {
-    "Qwen 3.8 27B (Groq)": "qwen/qwen3.8-27b",
-    "Qwen 3.6 27B (Groq)": "qwen/qwen3.6-27b",
-    "GPT-OSS 20B (Groq)": "openai/gpt-oss-20b",
-    "Allam 2 7B (Groq)": "allam-2-7b",
+    "Llama 3.3 70B Versatile (Flagship)": "llama-3.3-70b-versatile",
+    "Llama 3.1 8B Instant (Ultra-Fast)": "llama-3.1-8b-instant",
+    "DeepSeek R1 Distill Llama 70B (Reasoning)": "deepseek-r1-distill-llama-70b",
+    "Gemma 2 9B IT (Google)": "gemma2-9b-it",
+    "Mixtral 8x7B 32k (Long Context)": "mixtral-8x7b-32768",
 }
 
 # HuggingFace Inference API route — used to demonstrate ChatHuggingFace,

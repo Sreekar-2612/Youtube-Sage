@@ -195,6 +195,12 @@ export default function App() {
         }
     }
 
+    const [seekSeconds, setSeekSeconds] = useState(0);
+
+    const handleSeek = (sec) => {
+        setSeekSeconds(sec);
+    };
+
     async function handleSend(question) {
         const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
         const userMsg = { role: "user", content: question, timestamp };
@@ -212,6 +218,99 @@ export default function App() {
         setSending(true);
         setError(null);
         const startTime = Date.now();
+        const botTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+        if (!useAgent) {
+            // Real-time SSE streaming path
+            const botMsg = {
+                role: "assistant",
+                content: "",
+                timestamp: botTimestamp,
+                isStreaming: true,
+            };
+
+            setMessages(prev => [...prev, botMsg]);
+
+            try {
+                await api.chatStream(
+                    session.session_id,
+                    question,
+                    false,
+                    (token, accumulated) => {
+                        setMessages(prev => {
+                            const updated = [...prev];
+                            const lastIdx = updated.length - 1;
+                            if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+                                updated[lastIdx] = {
+                                    ...updated[lastIdx],
+                                    content: accumulated,
+                                };
+                            }
+                            return updated;
+                        });
+                    },
+                    (finalText) => {
+                        const elapsed = Date.now() - startTime;
+                        setLastLatency(elapsed);
+                        setTotalLatency(prev => prev + elapsed);
+                        setQueryCount(prev => prev + 1);
+
+                        const words = finalText.trim().split(/\s+/).length;
+                        const tokens = Math.max(1, Math.round(words * 1.3));
+                        const throughput = elapsed > 0 ? Math.round((tokens / (elapsed / 1000)) * 10) / 10 : 0;
+                        setLastThroughput(throughput);
+
+                        setMessages(prev => {
+                            const updated = [...prev];
+                            const lastIdx = updated.length - 1;
+                            if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+                                updated[lastIdx] = {
+                                    ...updated[lastIdx],
+                                    content: finalText,
+                                    isStreaming: false,
+                                };
+                            }
+                            if (!isPrivate) {
+                                setSessionMessages(prevMap => ({
+                                    ...prevMap,
+                                    [session.session_id]: updated
+                                }));
+                            }
+                            return updated;
+                        });
+                    },
+                    (err) => {
+                        console.warn("Stream issue, falling back to standard invoke:", err);
+                        api.chat(session.session_id, question, false)
+                            .then(result => {
+                                setMessages(prev => {
+                                    const updated = [...prev];
+                                    const lastIdx = updated.length - 1;
+                                    if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+                                        updated[lastIdx] = {
+                                            role: "assistant",
+                                            content: result.answer,
+                                            keyPoints: result.key_points,
+                                            confidence: result.confidence,
+                                            timestamp: botTimestamp,
+                                            isStreaming: false,
+                                        };
+                                    }
+                                    return updated;
+                                });
+                            })
+                            .catch(fallbackErr => setError(fallbackErr.message));
+                    }
+                );
+            } catch (e) {
+                setError(e.message);
+            } finally {
+                setSending(false);
+            }
+            return;
+        }
+
+        // Agent tool-calling path
         try {
             const result = await api.chat(session.session_id, question, useAgent);
             const endTime = Date.now();
@@ -221,13 +320,11 @@ export default function App() {
             setTotalLatency((prev) => prev + elapsed);
             setQueryCount((prev) => prev + 1);
 
-            // Compute throughput (est. 1.3 tokens per word)
             const words = result.answer.trim().split(/\s+/).length;
             const tokens = Math.max(1, Math.round(words * 1.3));
             const throughput = elapsed > 0 ? Math.round((tokens / (elapsed / 1000)) * 10) / 10 : 0;
             setLastThroughput(throughput);
 
-            const botTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             const botMsg = {
                 role: "assistant",
                 content: result.answer,
@@ -296,34 +393,37 @@ export default function App() {
     function handleExportChat() {
         if (messages.length === 0) return;
         const title = session?.title || "yt_sage_chat";
-        let content = `YT-Sage Chat Transcript - ${title}\n`;
-        content += `Session ID: ${session?.session_id || "N/A"}\n`;
-        content += `Generated on: ${new Date().toLocaleString()}\n`;
-        content += `========================================================================\n\n`;
+        let content = `# YT-Sage Video Intelligence Briefing\n\n`;
+        content += `> **Source Video**: [${title}](https://www.youtube.com/watch?v=${session?.video_id || ""})\n`;
+        content += `> **Session ID**: \`${session?.session_id || "N/A"}\` | **Generated**: ${new Date().toLocaleString()}\n`;
+        if (session?.summary) {
+            content += `\n### Video Executive Overview\n${session.summary}\n`;
+        }
+        content += `\n---\n\n## Dialogue & Analysis Log\n\n`;
 
-        messages.forEach(msg => {
-            const roleName = msg.role === "user" ? "ROOT_ADMIN" : "SAGE_AI";
-            content += `[${roleName}] (${msg.timestamp || ""})\n`;
-            content += `------------------------------------------------------------------------\n`;
+        messages.forEach((msg) => {
+            const isUser = msg.role === "user";
+            const roleName = isUser ? "👤 User Query" : "🤖 SAGE AI";
+            content += `### ${roleName} (${msg.timestamp || ""})\n\n`;
             content += `${msg.content}\n\n`;
             if (msg.keyPoints && msg.keyPoints.length > 0) {
-                content += `Key Highlights:\n`;
+                content += `**Key Insights:**\n`;
                 msg.keyPoints.forEach(pt => {
                     content += `- ${pt}\n`;
                 });
                 content += `\n`;
             }
             if (msg.confidence) {
-                content += `Confidence: ${msg.confidence}\n\n`;
+                content += `*Confidence: ${msg.confidence}*\n\n`;
             }
-            content += `========================================================================\n\n`;
+            content += `---\n\n`;
         });
 
-        const blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
+        const blob = new Blob([content], { type: "text/markdown;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_transcript.txt`);
+        link.setAttribute("download", `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_briefing.md`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -372,6 +472,7 @@ export default function App() {
                         loading={loading}
                         session={session}
                         onClearMemory={handleClearMemory}
+                        seekSeconds={seekSeconds}
                     />
                     <EngineConfig
                         config={config}
@@ -497,6 +598,7 @@ export default function App() {
                 onSend={handleSend}
                 sending={sending}
                 useAgent={useAgent}
+                onSeek={handleSeek}
             />
         </div>
     );

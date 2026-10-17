@@ -18,6 +18,7 @@ from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from dotenv import load_dotenv
@@ -39,7 +40,7 @@ from src.youtube_loader import YouTubeTranscriptLoader
 from src.text_processing import split_documents
 from src.vectorstore import build_vectorstore, get_retriever, get_embeddings
 from src.llm_setup import get_llm
-from src.chains import build_conversational_chain, clear_session_history, get_session_history
+from src.chains import build_conversational_chain, build_streaming_chain, clear_session_history, get_session_history
 from src.agent_tools import build_agent
 from langchain_core.documents import Document
 
@@ -82,6 +83,51 @@ def get_video_title(video_url: str) -> str:
         return "Loaded YouTube Stream"
 
 
+def generate_video_overview(llm, title: str, chunks: List[Document]) -> tuple[str, List[str]]:
+    """Generates an instant executive summary and 3 suggested questions on video load."""
+    if not chunks:
+        return (
+            "General chat session active.",
+            ["What can you help me with?", "Explain RAG architecture", "How to use this tool?"]
+        )
+
+    context_sample = "\n\n".join(c.page_content[:250] for c in chunks[:3])
+    prompt = (
+        f"You are analyzing a YouTube video titled '{title}'.\n"
+        f"Transcript excerpt:\n{context_sample}\n\n"
+        "Provide:\n"
+        "1. A 2-bullet concise executive summary (markdown format).\n"
+        "2. Exactly 3 short, intriguing questions a viewer should ask about this video.\n"
+        "Respond ONLY in valid JSON matching this schema:\n"
+        "{\n"
+        "  \"summary\": \"- Key point 1\\n- Key point 2\",\n"
+        "  \"suggested_questions\": [\"Question 1?\", \"Question 2?\", \"Question 3?\"]\n"
+        "}"
+    )
+    try:
+        raw = llm.invoke(prompt).content
+        cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip(), flags=re.MULTILINE)
+        data = json.loads(cleaned)
+        return (
+            data.get("summary", f"Loaded '{title}' with {len(chunks)} indexed segments."),
+            data.get("suggested_questions", [
+                "Summarize the key takeaways of this video",
+                "What tools or concepts are discussed?",
+                "What is the conclusion or next step?"
+            ])
+        )
+    except Exception as e:
+        logger.warning(f"Overview generation fallback: {e}")
+        return (
+            f"Video '{title}' indexed with {len(chunks)} timestamped segments.",
+            [
+                "Summarize the main takeaways",
+                "What are the most important insights discussed?",
+                "List all key concepts mentioned"
+            ]
+        )
+
+
 class LoadVideoRequest(BaseModel):
     video_url: str
     provider: str = "groq"          # "groq" | "huggingface"
@@ -93,6 +139,8 @@ class LoadVideoResponse(BaseModel):
     video_id: str
     num_chunks: int
     title: str
+    summary: Optional[str] = None
+    suggested_questions: List[str] = []
 
 
 class ChatRequest(BaseModel):
@@ -161,7 +209,7 @@ def load_video(req: LoadVideoRequest):
             docs = [Document(page_content="Temporary general chat session. You can ask anything.", metadata={"video_id": "temp-chat", "source": "temp-chat"})]
             chunks = docs
             vectorstore = build_vectorstore(chunks)
-            retriever = get_retriever(vectorstore)
+            retriever = get_retriever(vectorstore, chunks)
             llm = get_llm(req.provider, req.model_name)
             session_id = str(uuid.uuid4())
             title = "Temporary Chat"
@@ -169,6 +217,7 @@ def load_video(req: LoadVideoRequest):
             SESSIONS[session_id] = {
                 "retriever": retriever,
                 "chain": build_conversational_chain(llm, retriever),
+                "stream_chain": build_streaming_chain(llm, retriever),
                 "agent": build_agent(llm, retriever),
                 "video_id": "temp-chat",
                 "title": title,
@@ -178,13 +227,20 @@ def load_video(req: LoadVideoRequest):
                 video_id="temp-chat",
                 num_chunks=0,
                 title=title,
+                summary="Temporary general chat session. You can ask anything without video indexing.",
+                suggested_questions=[
+                    "How does RAG retrieval work?",
+                    "What makes Groq LPU inference fast?",
+                    "How do timestamped video citations work?"
+                ]
             )
 
         loader = YouTubeTranscriptLoader(req.video_url)
         docs = loader.load()
         chunks = split_documents(docs)
         vectorstore = build_vectorstore(chunks)
-        retriever = get_retriever(vectorstore)
+        # Pass chunks to initialize HybridRetriever (Dense FAISS + BM25 keyword matching)
+        retriever = get_retriever(vectorstore, chunks)
 
         llm = get_llm(req.provider, req.model_name)
 
@@ -193,12 +249,18 @@ def load_video(req: LoadVideoRequest):
         # Get video title
         title = get_video_title(req.video_url)
 
+        # Generate instant executive summary and suggested questions
+        summary, suggested_questions = generate_video_overview(llm, title, chunks)
+
         SESSIONS[session_id] = {
             "retriever": retriever,
             "chain": build_conversational_chain(llm, retriever),
+            "stream_chain": build_streaming_chain(llm, retriever),
             "agent": build_agent(llm, retriever),
             "video_id": docs[0].metadata["video_id"],
             "title": title,
+            "summary": summary,
+            "suggested_questions": suggested_questions,
         }
 
         return LoadVideoResponse(
@@ -206,6 +268,8 @@ def load_video(req: LoadVideoRequest):
             video_id=docs[0].metadata["video_id"],
             num_chunks=len(chunks),
             title=title,
+            summary=summary,
+            suggested_questions=suggested_questions,
         )
     except Exception as e:
         logger.error(f"Failed to load video: {e}")
@@ -239,6 +303,47 @@ def chat(req: ChatRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(req: ChatRequest):
+    session = SESSIONS.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found. Load a video first.")
+
+    async def event_generator():
+        try:
+            stream_chain = session.get("stream_chain")
+            if not stream_chain:
+                llm = get_llm("groq", "llama-3.1-8b-instant")
+                stream_chain = build_streaming_chain(llm, session["retriever"])
+                session["stream_chain"] = stream_chain
+
+            # Stream tokens in real-time from the LCEL chain
+            async for token in stream_chain.astream(
+                {"question": req.question},
+                config={"configurable": {"session_id": req.session_id}}
+            ):
+                if token:
+                    data = json.dumps({"token": token})
+                    yield f"data: {data}\n\n"
+
+            yield "data: [DONE]\n\n"
+        except Exception as err:
+            logger.error(f"Error during stream generation: {err}")
+            err_data = json.dumps({"error": str(err)})
+            yield f"data: {err_data}\n\n"
+            yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 @app.post("/api/session/clear")

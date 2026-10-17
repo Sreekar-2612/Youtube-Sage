@@ -81,23 +81,37 @@ class YouTubeTranscriptLoader(BaseLoader):
         full_text_parts = []
         num_segments = 0
 
-        # Handle both API versions
+        # Handle both API versions and preserve timestamp offsets
+        segments = []
         if hasattr(transcript, 'to_raw_data'):
             # v0.x API
             raw = transcript.to_raw_data()
-            full_text_parts = [chunk["text"] for chunk in raw]
-            num_segments = len(raw)
+            for chunk in raw:
+                text = chunk.get("text", "").strip()
+                if text:
+                    segments.append({
+                        "text": text,
+                        "start": float(chunk.get("start", 0.0)),
+                        "duration": float(chunk.get("duration", 0.0))
+                    })
         else:
             # v1.x API - FetchedTranscript is iterable
             for snippet in transcript:
-                full_text_parts.append(snippet.text)
-                num_segments += 1
+                text = getattr(snippet, "text", str(snippet)).strip()
+                start = getattr(snippet, "start", 0.0)
+                duration = getattr(snippet, "duration", 0.0)
+                if text:
+                    segments.append({
+                        "text": text,
+                        "start": float(start),
+                        "duration": float(duration)
+                    })
 
-        if not full_text_parts:
+        if not segments:
             raise RuntimeError(f"Transcript for {self.video_id} was empty.")
 
-        full_text = " ".join(full_text_parts)
-        return full_text, num_segments
+        full_text = " ".join(s["text"] for s in segments)
+        return full_text, segments
 
     def _fetch_from_fallback_service(self) -> tuple[str, int]:
         """Tier 2: Fallback via cloud-resilient transcript services."""
@@ -175,20 +189,21 @@ class YouTubeTranscriptLoader(BaseLoader):
 
     def load(self) -> List[Document]:
         full_text = None
-        num_segments = 0
+        segments = []
 
         # Tier 1: Try standard YouTubeTranscriptApi
         try:
             logger.info(f"Fetching transcript for video {self.video_id} via API...")
-            full_text, num_segments = self._fetch_from_youtube_transcript_api()
-            logger.info(f"Successfully fetched transcript ({num_segments} segments) via API")
+            full_text, segments_data = self._fetch_from_youtube_transcript_api()
+            segments = segments_data if isinstance(segments_data, list) else []
+            logger.info(f"Successfully fetched transcript ({len(segments)} segments) via API")
         except Exception as e:
             logger.warning(f"Primary API failed for {self.video_id}: {e}")
             # Tier 2: Fall back to cloud-resilient scraper service
             try:
                 logger.info(f"Trying fallback service for video {self.video_id}...")
-                full_text, num_segments = self._fetch_from_fallback_service()
-                logger.info(f"Successfully fetched transcript ({num_segments} segments) via fallback")
+                full_text, fallback_count = self._fetch_from_fallback_service()
+                logger.info(f"Successfully fetched transcript ({fallback_count} units) via fallback")
             except Exception as fallback_err:
                 logger.error(f"All transcript sources failed for {self.video_id}")
                 raise RuntimeError(
@@ -201,7 +216,8 @@ class YouTubeTranscriptLoader(BaseLoader):
             metadata={
                 "source": f"https://www.youtube.com/watch?v={self.video_id}",
                 "video_id": self.video_id,
-                "num_transcript_segments": num_segments,
+                "num_transcript_segments": len(segments) if segments else 1,
+                "segments": segments,
             },
         )
         return [doc]

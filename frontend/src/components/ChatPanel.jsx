@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import MessageCard from "./MessageCard.jsx";
 import TurnDivider from "./TurnDivider.jsx";
 
-export default function ChatPanel({ session, messages, onSend, sending, useAgent }) {
+export default function ChatPanel({ session, messages, onSend, sending, useAgent, onSeek }) {
   const [input, setInput] = useState("");
   const scrollRef = useRef(null);
   const dockRef = useRef(null);
@@ -155,12 +155,52 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
             <div className="w-8 h-px bg-outline"></div>
           </div>
 
-          {/* Messages list */}
+          {/* Messages list / Welcome Onboarding */}
           {messages.length === 0 && (
-            <div className="text-center p-6 border border-dashed border-outline-variant bg-surface-container-low rounded">
-              <p className="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">
-                Transcript indexed successfully. Execute analysis commands below.
-              </p>
+            <div className="space-y-4">
+              <div className="p-5 tech-border border-l-4 border-l-primary bg-surface-container-low rounded-r-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-primary text-base">auto_awesome</span>
+                  <span className="font-label-technical text-xs font-bold text-primary uppercase tracking-wider">
+                    Executive Video Intelligence
+                  </span>
+                </div>
+                <div className="font-body-md text-xs text-on-surface leading-relaxed whitespace-pre-line mb-3">
+                  {session.summary || `Indexed ${session.num_chunks || 0} transcript segments. Ready for question answering with live timestamp synchronization.`}
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-on-surface-variant opacity-75 font-label-technical">
+                  <span className="material-symbols-outlined text-[13px] text-primary">verified</span>
+                  <span>Hybrid Semantic + Keyword Search Active</span>
+                </div>
+              </div>
+
+              {/* Quick-Prompt Chips */}
+              <div>
+                <p className="font-label-technical text-[10px] uppercase font-bold text-on-surface-variant mb-2 tracking-widest flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-secondary text-xs">bolt</span>
+                  Suggested Starters:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(session.suggested_questions && session.suggested_questions.length > 0
+                    ? session.suggested_questions
+                    : [
+                        "Summarize the key takeaways of this video",
+                        "What are the main concepts or tools discussed?",
+                        "What are the critical conclusions or milestones?"
+                      ]
+                  ).map((q, qIdx) => (
+                    <button
+                      key={qIdx}
+                      type="button"
+                      onClick={() => onSend(q)}
+                      className="text-left px-3 py-2 bg-white hover:bg-primary hover:text-white border border-outline hover:border-primary text-on-surface rounded font-label-technical text-xs transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[13px] opacity-60">chat_bubble_outline</span>
+                      <span>{q}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -176,6 +216,7 @@ export default function ChatPanel({ session, messages, onSend, sending, useAgent
                   keyPoints={m.keyPoints}
                   confidence={m.confidence}
                   timestamp={m.timestamp}
+                  onSeek={onSeek}
                 />
               </React.Fragment>
             );

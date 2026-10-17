@@ -46,19 +46,19 @@ def build_condense_chain(llm):
     condense_prompt = ChatPromptTemplate.from_messages(
         [
             (
-                "system" , "Rewrtie the latest user question as a standalone question, "
-                           "using the chat history for context. Return ONLY the rewrittenr question , nothing else"
+                "system", "Rewrite the latest user question as a standalone question, "
+                          "using the chat history for context. Return ONLY the rewritten question, nothing else."
             ),
             MessagesPlaceholder("chat_history"),
-            ("human","{question}"),
+            ("human", "{question}"),
         ]
     )
     
-    has_history = lambda x : len(x.get("chat_history", [])) > 0
+    has_history = lambda x: len(x.get("chat_history", [])) > 0
 
     condense_chain = RunnableBranch(
         (has_history, condense_prompt | llm | StrOutputParser()),
-        itemgetter("question"), # if no history -> then pass through the question unchanged
+        itemgetter("question"), # if no history -> pass through question unchanged
     )
     return condense_chain
 
@@ -124,14 +124,62 @@ def get_session_history(session_id : str) -> ChatMessageHistory:
     return _session_store[session_id]
 
 def build_conversational_chain(llm, retriever):
-    rag_chain = build_rag_chain(llm , retriever)
+    rag_chain = build_rag_chain(llm, retriever)
     return RunnableWithMessageHistory(
         rag_chain,
         get_session_history,
-        input_messages_key = "question",
-        history_messages_key = "chat_history",
+        input_messages_key="question",
+        history_messages_key="chat_history",
     )
 
+
+STREAMING_ANSWER_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are YT-Sage, an elite video intelligence co-pilot. Answer the user's question "
+            "directly using the transcript context provided below.\n\n"
+            "CRITICAL INSTRUCTIONS:\n"
+            "1. Whenever explaining any topic or answering, cite the exact video timestamp in format [MM:SS] (e.g. [02:15]).\n"
+            "2. Structure your response cleanly using Markdown with bullet points and bold highlights.\n"
+            "3. If the transcript context does not contain the answer, say honestly that it is not covered in this video.\n\n"
+            "Transcript Context:\n{context}"
+        ),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{question}"),
+    ]
+)
+
+
+def build_streaming_chain(llm, retriever):
+    condense_chain = build_condense_chain(llm)
+    chain = (
+        RunnableParallel(
+            {
+                "standalone_question": condense_chain,
+                "question": itemgetter("question"),
+                "chat_history": itemgetter("chat_history"),
+            }
+        )
+        | RunnableParallel(
+            {
+                "context": itemgetter("standalone_question") | retriever | format_docs_runnable,
+                "question": itemgetter("question"),
+                "chat_history": itemgetter("chat_history"),
+            }
+        )
+        | STREAMING_ANSWER_PROMPT
+        | llm
+        | StrOutputParser()
+    )
+    return RunnableWithMessageHistory(
+        chain,
+        get_session_history,
+        input_messages_key="question",
+        history_messages_key="chat_history",
+    )
+
+
 def clear_session_history(session_id: str):
-    _session_store.pop(session_id,None)
+    _session_store.pop(session_id, None)
     
