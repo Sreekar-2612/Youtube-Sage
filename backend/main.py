@@ -13,6 +13,7 @@ React app just needs to hold onto the session_id string.
 """
 import uuid
 import os
+import re
 import logging
 from typing import Optional, List
 
@@ -63,7 +64,18 @@ def startup_event():
         print("Embedding warm-up notice:", e)
 
 # session_id -> {"retriever", "chain", "agent", "video_id"}
+MAX_SESSIONS = 50
 SESSIONS = {}
+
+
+def store_session(session_id: str, session_data: dict):
+    """Stores a session in-memory, evicting the oldest session if MAX_SESSIONS is exceeded."""
+    if len(SESSIONS) >= MAX_SESSIONS:
+        oldest_id = next(iter(SESSIONS))
+        logger.info(f"Evicting oldest session to prevent memory leak: {oldest_id}")
+        SESSIONS.pop(oldest_id, None)
+        clear_session_history(oldest_id)
+    SESSIONS[session_id] = session_data
 
 
 import urllib.request
@@ -214,14 +226,14 @@ def load_video(req: LoadVideoRequest):
             session_id = str(uuid.uuid4())
             title = "Temporary Chat"
             
-            SESSIONS[session_id] = {
+            store_session(session_id, {
                 "retriever": retriever,
                 "chain": build_conversational_chain(llm, retriever),
                 "stream_chain": build_streaming_chain(llm, retriever),
                 "agent": build_agent(llm, retriever),
                 "video_id": "temp-chat",
                 "title": title,
-            }
+            })
             return LoadVideoResponse(
                 session_id=session_id,
                 video_id="temp-chat",
@@ -252,7 +264,7 @@ def load_video(req: LoadVideoRequest):
         # Generate instant executive summary and suggested questions
         summary, suggested_questions = generate_video_overview(llm, title, chunks)
 
-        SESSIONS[session_id] = {
+        store_session(session_id, {
             "retriever": retriever,
             "chain": build_conversational_chain(llm, retriever),
             "stream_chain": build_streaming_chain(llm, retriever),
@@ -261,7 +273,7 @@ def load_video(req: LoadVideoRequest):
             "title": title,
             "summary": summary,
             "suggested_questions": suggested_questions,
-        }
+        })
 
         return LoadVideoResponse(
             session_id=session_id,

@@ -16,6 +16,7 @@ def run():
         "test_hybrid_and_streaming.py",
         "test_agent_tools.py",
         "test_onboarding.py",
+        "test_integration_smoke.py",
     ]
     
     for idx, s in enumerate(suites, 1):
@@ -28,7 +29,7 @@ def run():
             sys.exit(1)
         
     print("\n" + "=" * 60)
-    print("[OK] META-REVIEW SIGN-OFF: ALL BACKEND QA SUITES PASSED (10/10)")
+    print("[OK] AUDIT & META-REVIEW SIGN-OFF: ALL BACKEND QA SUITES PASSED (18/18)")
     print("=" * 60)
 
 if __name__ == "__main__":

@@ -55,8 +55,30 @@ def test_timestamp_preserving_chunker():
         print(f"  -> Chunk {idx + 1}: ts={c.metadata['timestamp']} ({c.metadata['start_seconds']}s - {c.metadata['end_seconds']}s): {c.page_content[:45]}...")
     print("  -> PASS: All chunks correctly preserve timestamp metadata and prefix.")
 
+def test_hf_llm_setup():
+    print("[TEST 4] Verifying HuggingFace LLM configuration function...")
+    import inspect
+    from src.llm_setup import get_hf_llm
+    sig = inspect.signature(get_hf_llm)
+    assert "model_name" in sig.parameters
+    # Also verify that when HF_TOKEN is missing, ValueError is raised cleanly
+    saved_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN", "")
+    try:
+        import src.llm_setup as llm_mod
+        llm_mod.HF_TOKEN = ""
+        try:
+            llm_mod.get_hf_llm("meta-llama/Meta-Llama-3.1-8B-Instruct")
+            assert False, "Should raise ValueError when token missing"
+        except ValueError as ve:
+            assert "Hugging Face" in str(ve) or "Hugging face" in str(ve)
+    finally:
+        import src.llm_setup as llm_mod
+        llm_mod.HF_TOKEN = saved_token
+    print("  -> PASS: HuggingFace LLM setup validated.")
+
 if __name__ == "__main__":
     test_groq_models()
     test_embeddings()
     test_timestamp_preserving_chunker()
-    print("\n=== ALL SUBAGENT 2 QA REVIEWS PASSED (3/3) ===")
+    test_hf_llm_setup()
+    print("\n=== ALL SUBAGENT 2 QA REVIEWS PASSED (4/4) ===")

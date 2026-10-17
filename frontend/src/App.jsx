@@ -179,6 +179,8 @@ export default function App() {
                     video_id: result.video_id,
                     title: result.title,
                     num_chunks: result.num_chunks,
+                    summary: result.summary,
+                    suggested_questions: result.suggested_questions,
                     date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
                 };
@@ -279,27 +281,46 @@ export default function App() {
                             return updated;
                         });
                     },
-                    (err) => {
+                    async (err) => {
                         console.warn("Stream issue, falling back to standard invoke:", err);
-                        api.chat(session.session_id, question, false)
-                            .then(result => {
-                                setMessages(prev => {
-                                    const updated = [...prev];
-                                    const lastIdx = updated.length - 1;
-                                    if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
-                                        updated[lastIdx] = {
-                                            role: "assistant",
-                                            content: result.answer,
-                                            keyPoints: result.key_points,
-                                            confidence: result.confidence,
-                                            timestamp: botTimestamp,
-                                            isStreaming: false,
-                                        };
-                                    }
-                                    return updated;
-                                });
-                            })
-                            .catch(fallbackErr => setError(fallbackErr.message));
+                        try {
+                            const result = await api.chat(session.session_id, question, false);
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const lastIdx = updated.length - 1;
+                                if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+                                    updated[lastIdx] = {
+                                        role: "assistant",
+                                        content: result.answer,
+                                        keyPoints: result.key_points,
+                                        confidence: result.confidence,
+                                        timestamp: botTimestamp,
+                                        isStreaming: false,
+                                    };
+                                }
+                                if (!isPrivate) {
+                                    setSessionMessages(prevMap => ({
+                                        ...prevMap,
+                                        [session.session_id]: updated
+                                    }));
+                                }
+                                return updated;
+                            });
+                        } catch (fallbackErr) {
+                            setError(fallbackErr.message);
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const lastIdx = updated.length - 1;
+                                if (lastIdx >= 0 && updated[lastIdx].role === "assistant") {
+                                    updated[lastIdx] = {
+                                        ...updated[lastIdx],
+                                        content: `⚠️ Failed to generate response: ${fallbackErr.message}`,
+                                        isStreaming: false,
+                                    };
+                                }
+                                return updated;
+                            });
+                        }
                     }
                 );
             } catch (e) {
@@ -372,7 +393,9 @@ export default function App() {
             session_id: histItem.session_id,
             video_id: histItem.video_id,
             num_chunks: histItem.num_chunks,
-            title: histItem.title
+            title: histItem.title,
+            summary: histItem.summary,
+            suggested_questions: histItem.suggested_questions,
         });
         if (histItem.video_id === "temp-chat") {
             setVideoUrl("");

@@ -114,7 +114,7 @@ export const api = {
             if (onDone) onDone(accumulated);
             return accumulated;
         } catch (err) {
-            if (onError) onError(err);
+            if (onError) await onError(err);
             else throw err;
         }
     },

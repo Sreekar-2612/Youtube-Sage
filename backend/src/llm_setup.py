@@ -21,13 +21,14 @@ def get_groq_llm(model_name : str, temperature: float = 0.5):
 
 def get_hf_llm(model_name: str, temperature: float = 0.5):
     if not HF_TOKEN:
-        raise ValueError("Hugging face api key is not set , add it to your .env file")
-    return ChatHuggingFace(
-        model = model_name,
-        huggingfacehub_api_token= HF_TOKEN,
-        temperature = temperature,
-        max_new_tokens = 512
+        raise ValueError("Hugging Face API key is not set, add it to your .env file")
+    endpoint = HuggingFaceEndpoint(
+        repo_id=model_name,
+        huggingfacehub_api_token=HF_TOKEN,
+        temperature=temperature,
+        max_new_tokens=512,
     )
+    return ChatHuggingFace(llm=endpoint)
 
 
 def get_llm(provider : str, model_name:str, temperature: float = 0.5):
